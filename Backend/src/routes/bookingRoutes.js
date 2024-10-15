@@ -10,5 +10,8 @@ router.get('/:id', bookingController.getBookingById);
 router.post('/', bookingController.createBooking);
 router.put('/:id/status', bookingController.updateBookingStatus);
 router.delete('/:id', bookingController.deleteBooking);
+router.post('/:id/track', bookingController.startTracking);
+router.get('/:id/location', bookingController.getLocation);
+router.post('/:id/location', bookingController.updateLocation);
 
 module.exports = router;

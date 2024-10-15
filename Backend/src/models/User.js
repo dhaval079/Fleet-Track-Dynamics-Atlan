@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['customer', 'driver'], default: 'customer' },
+  role: { type: String, enum: ['customer', 'driver', 'admin'], default: 'customer' },
   // Fields for drivers
   licenseNumber: { type: String, unique: true, sparse: true },
   experienceYears: { type: Number },

@@ -2,10 +2,9 @@ const jwt = require('jsonwebtoken');
 
 const authentication = async (req, res, next) => {
   try {
-    const token =
-      req.cookies.token ||
-      req.body.token ||
-      (req.header("Authorization") ? req.header("Authorization").replace("Bearer ", "") : null);
+    const token = req.header('Authorization')?.replace('Bearer ', '') || 
+                  req.cookies.token ||
+                  req.body.token;
 
     if (!token) {
       return res.status(401).json({ success: false, message: "Token Not Found" });

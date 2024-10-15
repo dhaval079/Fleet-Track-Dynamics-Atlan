@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div>
+        <input type="text" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button id="login">Login</button>
+    </div>
+    <button id="connect">Connect</button>
+    <button id="subscribe">Subscribe to Booking</button>
+    <button id="updateLocation">Update Location</button>
+    <button id="getLocation">Get Location</button>
+    <div id="output"></div>
+
+    <script>
+        let token = '';
+        const socket = io('http://localhost:3001');
+        const bookingId = '670d6ad9a607f1c283889d5c'; // Use the booking ID from your test
+
+        document.getElementById('login').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                const response = await fetch('http://localhost:3001/api/v2/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    token = data.token;
+                    log('Login successful. Token received: ' + token);
+                } else {
+                    log('Login failed: ' + data.message);
+                }
+            } catch (error) {
+                log('Login error: ' + error.message);
+            }
+        });
+
+        document.getElementById('connect').addEventListener('click', () => {
+            if (!token) {
+                log('Please login first');
+                return;
+            }
+            socket.io.opts.extraHeaders = {
+                Authorization: `Bearer ${token}`
+            };
+            socket.connect();
+            log('Connected to WebSocket');
+        });
+
+        document.getElementById('subscribe').addEventListener('click', () => {
+            if (!token) {
+                log('Please login first');
+                return;
+            }
+            socket.emit('subscribe', bookingId);
+            log('Subscribed to booking: ' + bookingId);
+        });
+
+        document.getElementById('updateLocation').addEventListener('click', async () => {
+            if (!token) {
+                log('Please login first');
+                return;
+            }
+            const location = { lat: Math.random() * 90, lng: Math.random() * 180 };
+            try {
+                const response = await fetch(`http://localhost:3001/api/v2/bookings/${bookingId}/location`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(location),
+                });
+                const data = await response.json();
+                log('Location updated: ' + JSON.stringify(location));
+                log('Server response: ' + JSON.stringify(data));
+            } catch (error) {
+                log('Update location error: ' + error.message);
+            }
+        });
+
+        document.getElementById('getLocation').addEventListener('click', async () => {
+            if (!token) {
+                log('Please login first');
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:3001/api/v2/bookings/${bookingId}/location`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                log('Current location: ' + JSON.stringify(data.location));
+            } catch (error) {
+                log('Get location error: ' + error.message);
+            }
+        });
+
+        socket.on('locationUpdate', (location) => {
+            log('Received location update: ' + JSON.stringify(location));
+        });
+
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += message + '<br>';
+        }
+    </script>
+</body>
+</html>

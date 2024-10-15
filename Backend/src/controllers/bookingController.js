@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const Vehicle = require('../models/Vehicle');
+const trackingService = require('../services/trackingService');
 
 exports.getAllBookings = async (req, res) => {
   try {
@@ -134,6 +135,50 @@ exports.deleteBooking = async (req, res) => {
     res.status(200).json({ success: true, message: 'Booking deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error deleting booking', error: error.message });
+  }
+};
+
+exports.startTracking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+    
+    // Initialize tracking
+    await trackingService.updateLocation(id, { lat: 0, lng: 0 });
+    
+    res.status(200).json({ success: true, message: 'Tracking started' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error starting tracking', error: error.message });
+  }
+};
+
+
+exports.getLocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const location = await trackingService.getLocation(id);
+    if (!location) {
+      return res.status(404).json({ success: false, message: 'Location not found' });
+    }
+    res.status(200).json({ success: true, location });
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    res.status(500).json({ success: false, message: 'Error fetching location', error: error.message });
+  }
+};
+
+exports.updateLocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lat, lng } = req.body;
+    await trackingService.updateLocation(id, { lat, lng });
+    res.status(200).json({ success: true, message: 'Location updated successfully' });
+  } catch (error) {
+    console.error('Error updating location:', error);
+    res.status(500).json({ success: false, message: 'Error updating location', error: error.message });
   }
 };
 

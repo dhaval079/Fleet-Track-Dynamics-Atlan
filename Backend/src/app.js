@@ -8,20 +8,35 @@ const userRouter = require('./routes/userRoutes');
 const driverRouter = require('./routes/driverRoutes');
 const vehicleRouter = require('./routes/vehicleRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
+const adminRouter = require('./routes/adminRoutes');
+const errorHandler = require('./middleware/errorHandler.js');
 
 const PORT = process.env.PORT || 3001;
-dotenv.config();
+const http = require('http');
+const setupWebSocket = require('./websockets/trackingSocket');
+
+require('dotenv').config({ path: './.env' });
+
+console.log('REDIS_URL:', process.env.REDIS_URL);
+console.log('MONGO_URL:', process.env.MONGO_URL);
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
+
 const app = express();
+const server = http.createServer(app);
+const io = setupWebSocket(server);
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
+app.use(errorHandler);
 
 app.use("/api/v2/auth", authRouter);
 app.use("/api/v2/users", userRouter);
 app.use("/api/v2/drivers", driverRouter);
 app.use("/api/v2/vehicles", vehicleRouter);
 app.use("/api/v2/bookings", bookingRouter);
+app.use("/api/v2/admin", adminRouter);
 
 app.get('/', (req, res) => {
   res.send(`
@@ -44,3 +59,5 @@ app.listen(PORT, () => {
   mongoDB();
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+module.exports = { app, io };
