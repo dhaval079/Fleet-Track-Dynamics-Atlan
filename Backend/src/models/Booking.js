@@ -32,7 +32,7 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted', 'in_progress', 'completed', 'cancelled'],
+    enum: ['pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled'],
     default: 'pending'
   },
   price: {
@@ -46,5 +46,9 @@ const bookingSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+bookingSchema.index({ user: 1, createdAt: -1 });
+bookingSchema.index({ driver: 1, status: 1 });
+bookingSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

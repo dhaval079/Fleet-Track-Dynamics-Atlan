@@ -1,12 +1,18 @@
-// src/middleware/errorMiddleware.js
+// src/middleware/errorHandler.js
 
 const errorHandler = (err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-      success: false,
-      message: 'An unexpected error occurred',
-      error: process.env.NODE_ENV === 'production' ? {} : err
-    });
-  };
-  
-  module.exports = errorHandler;
+  console.error(err.stack);
+
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Something went wrong';
+
+  res.status(statusCode).json({
+    success: false,
+    error: {
+      message: message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    }
+  });
+};
+
+module.exports = errorHandler;

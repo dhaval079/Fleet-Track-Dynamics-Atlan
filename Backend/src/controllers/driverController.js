@@ -1,5 +1,7 @@
 const Driver = require('../models/Driver');
 const User = require('../models/User');
+const Booking = require('../models/Booking');
+
 
 exports.getAllDrivers = async (req, res) => {
     try {
@@ -118,5 +120,43 @@ exports.getAvailableDrivers = async (req, res) => {
       res.status(400).json({ success: false, message: 'Error updating driver availability', error: error.message });
     }
   };
+
+
+exports.getCurrentJobs = async (req, res) => {
+  try {
+    const driverId = req.user.id;
+    const currentJobs = await Booking.find({ driver: driverId, status: { $in: ['assigned', 'en_route', 'goods_collected'] } });
+    res.status(200).json({ success: true, jobs: currentJobs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching current jobs', error: error.message });
+  }
+};
+
+exports.updateJobStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const driverId = req.user.id;
+
+    const booking = await Booking.findOne({ _id: id, driver: driverId });
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found or not assigned to this driver' });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    if (status === 'completed') {
+      const driver = await User.findById(driverId);
+      driver.isAvailable = true;
+      await driver.save();
+    }
+
+    res.status(200).json({ success: true, booking });
+  } catch (error) {
+    res.status(400).json({ success: false, message: 'Error updating job status', error: error.message });
+  }
+};
+
 
 module.exports = exports;

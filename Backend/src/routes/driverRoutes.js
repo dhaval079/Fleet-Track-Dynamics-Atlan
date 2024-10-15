@@ -13,5 +13,7 @@ router.put('/:id', driverController.updateDriver);
 router.put('/:id/location', driverController.updateDriverLocation);
 router.put('/:id/availability', driverController.updateDriverAvailability);
 router.delete('/:id', driverController.deleteDriver);
+router.get('/jobs', driverController.getCurrentJobs);
+router.put('/jobs/:id/status', driverController.updateJobStatus);
 
 module.exports = router;

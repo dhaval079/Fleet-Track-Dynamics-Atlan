@@ -35,4 +35,7 @@ userSchema.pre('save', async function(next) {
 
 userSchema.index({ currentLocation: '2dsphere' });
 
+userSchema.index({ role: 1, isAvailable: 1 });
+userSchema.index({ 'currentLocation': '2dsphere' });
+
 module.exports = mongoose.model('User', userSchema);
