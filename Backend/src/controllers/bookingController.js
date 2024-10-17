@@ -4,6 +4,8 @@ const Vehicle = require('../models/Vehicle');
 const trackingService = require('../services/trackingService');
 const pricingService = require('../services/pricingService');
 const redisClient = require('../config/redis');
+const { findMatchingDriver } = require('../services/matchingService');
+const mongoose = require('mongoose');
 
 exports.getAllBookings = async (req, res) => {
   try {
@@ -16,6 +18,40 @@ exports.getAllBookings = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error fetching bookings', error: error.message });
   }
 };
+
+
+
+exports.getUserBookings = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'User email is required' });
+    }
+
+    // Find the user by email first
+    const user = await User.findOne({ email: email }).select('_id');
+    console.log("User's bookings are :",user)
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Now find bookings for this user by _id
+    const bookings = await Booking.find({ user: user._id })
+      .populate('user', '-password')
+      .populate('driver', '-password')
+      .populate('vehicle')
+      .sort({ createdAt: -1 }); // Sort by creation date, newest first
+
+    res.status(200).json({ success: true, bookings });
+  } catch (error) {
+    console.error('Error fetching user bookings:', error);
+    res.status(500).json({ success: false, message: 'Error fetching user bookings', error: error.message });
+  }
+};
+
+
+
 
 exports.getBookingById = async (req, res) => {
   try {
@@ -101,7 +137,7 @@ exports.createBooking = async (req, res) => {
     await booking.save();
     console.log('Booking saved:', booking);
 
-    const match = await matchingService.findMatchingDriver(booking);
+    const match = await findMatchingDriver(booking);
 
     if (match) {
       booking.driver = match.driver._id;

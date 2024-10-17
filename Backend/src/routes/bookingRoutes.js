@@ -8,6 +8,7 @@ router.use(authentication);
 router.get('/', bookingController.getAllBookings);
 router.get('/:id', bookingController.getBookingById);
 router.post('/', bookingController.createBooking);
+router.post('/userbookings', bookingController.getUserBookings);
 router.put('/:id/status', bookingController.updateBookingStatus);
 router.delete('/:id', bookingController.deleteBooking);
 router.post('/:id/track', bookingController.startTracking);
