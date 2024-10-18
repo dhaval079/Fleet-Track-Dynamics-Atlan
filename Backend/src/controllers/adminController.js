@@ -111,7 +111,7 @@ exports.getDriverActivity = async (req, res) => {
 
 exports.getBookingData = async (req, res) => {
   try {
-    const { startDate, endDate, status, page = 1, limit = 10 } = req.query;
+    const { startDate, endDate, status } = req.query;
     const query = {};
     if (startDate && endDate) {
       query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
@@ -121,38 +121,103 @@ exports.getBookingData = async (req, res) => {
     }
 
     const totalBookings = await Booking.countDocuments(query);
-    const totalPages = Math.ceil(totalBookings / limit);
 
     const bookings = await Booking.find(query)
       .populate('user', 'username')
       .populate('driver', 'username')
       .populate('vehicle', 'make model')
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
 
     res.json({
       success: true,
       data: bookings,
       pagination: {
-        currentPage: Number(page),
-        totalPages,
         totalBookings,
-        limit: Number(limit)
       }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching booking data', error: error.message });
   }
 };
+exports.getFleetData = async (req, res) => {
+  try {
+    const fleetData = await Vehicle.find().populate('driver', 'username');
+    res.json({ success: true, data: fleetData });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching fleet data', error: error.message });
+  }
+};
+
+exports.getTripAnalytics = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const query = { createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) } };
+
+    const totalTrips = await Booking.countDocuments(query);
+    const completedTrips = await Booking.countDocuments({ ...query, status: 'completed' });
+
+    const tripTimes = await Booking.aggregate([
+      { $match: { ...query, status: 'completed' } },
+      { $project: { duration: { $subtract: ['$endTime', '$startTime'] } } },
+      { $group: { _id: null, totalDuration: { $sum: '$duration' }, count: { $sum: 1 } } }
+    ]);
+
+    const overallAvgTripTime = tripTimes.length > 0 ? tripTimes[0].totalDuration / tripTimes[0].count / 60000 : 0;
+
+    const avgTripTimeByHour = await Booking.aggregate([
+      { $match: { ...query, status: 'completed' } },
+      { $project: { hour: { $hour: '$startTime' }, duration: { $subtract: ['$endTime', '$startTime'] } } },
+      { $group: { _id: '$hour', avgTime: { $avg: '$duration' } } },
+      { $project: { hour: '$_id', avgTime: { $divide: ['$avgTime', 60000] } } },
+      { $sort: { hour: 1 } }
+    ]);
+
+    const topDrivers = await Booking.aggregate([
+      { $match: { ...query, status: 'completed' } },
+      { $group: {
+        _id: '$driver',
+        completedTrips: { $sum: 1 },
+        totalRevenue: { $sum: '$price' },
+        avgRating: { $avg: '$driverRating' }
+      }},
+      { $sort: { completedTrips: -1 } },
+      { $limit: 10 },
+      { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'driverInfo' } },
+      { $project: {
+        driverId: '$_id',
+        name: { $arrayElemAt: ['$driverInfo.username', 0] },
+        completedTrips: 1,
+        totalRevenue: 1,
+        avgRating: 1
+      }}
+    ]);
+
+    const incidentCount = await Booking.countDocuments({ ...query, hasIncident: true });
+
+    res.json({
+      success: true,
+      data: {
+        totalTrips,
+        completedTrips,
+        overallAvgTripTime,
+        avgTripTimeByHour,
+        topDrivers,
+        incidentCount,
+        avgDriverRating: topDrivers.reduce((sum, driver) => sum + driver.avgRating, 0) / topDrivers.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching trip analytics', error: error.message });
+  }
+};
 
 exports.getRevenueAnalytics = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    const query = { status: 'completed' };
-    if (startDate && endDate) {
-      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
-    }
+    const { startDate, endDate } = req.body;
+    const query = { 
+      status: 'completed',
+      createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+    };
 
     const revenueData = await Booking.aggregate([
       { $match: query },

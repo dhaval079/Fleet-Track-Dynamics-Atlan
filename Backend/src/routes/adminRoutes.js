@@ -1,3 +1,5 @@
+// src/routes/adminRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
@@ -14,6 +16,8 @@ router.get('/drivers', adminController.getAllDrivers);
 router.get('/vehicles', adminController.getAllVehicles);
 router.get('/driver-activity', adminController.getDriverActivity);
 router.get('/booking-data', adminController.getBookingData);
-router.get('/revenue-analytics', adminController.getRevenueAnalytics);
+router.post('/revenue-analytics', adminController.getRevenueAnalytics);
+router.get('/fleet', adminController.getFleetData);
+router.get('/trip-analytics', adminController.getTripAnalytics);
 
 module.exports = router;

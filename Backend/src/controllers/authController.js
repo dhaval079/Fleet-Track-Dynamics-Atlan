@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+
 exports.signup = async (req, res) => {
   try {
     const { username, email, password, role, licenseNumber, experienceYears } = req.body;
@@ -20,10 +21,10 @@ exports.signup = async (req, res) => {
     await user.save();
     
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
 
     res.status(201).json({ 
       success: true, 
+      token,
       user: { 
         id: user._id, 
         username: user.username, 
@@ -45,39 +46,42 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
 
-    res.status(200).json({ success: true, token, user: { id: user._id, username: user.username, email: user.email } });
+    res.status(200).json({ 
+      success: true, 
+      token, 
+      user: { 
+        id: user._id, 
+        username: user.username, 
+        email: user.email,
+        role: user.role  // Include the role in the response
+      } 
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
 exports.logout = (req, res) => {
-  res.clearCookie('token');
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
 exports.getMe = async (req, res) => {
   try {
-    // The user ID is available from the authentication middleware
     const userId = req.user.id;
-
-    // Fetch the user from the database
     const user = await User.findById(userId).select('-password');
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Return the user information
     res.status(200).json({
       success: true,
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
-        // Add any other fields you want to return
+        email: user.email,
+        role: user.role  // Include the role here as well
       }
     });
   } catch (error) {

@@ -1,20 +1,18 @@
-const Driver = require('../models/Driver');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
 
-
 exports.getAllDrivers = async (req, res) => {
-    try {
-      const drivers = await User.find({ role: 'driver' }).select('-password');
-      res.status(200).json({ success: true, drivers });
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Error fetching drivers', error: error.message });
-    }
-  };
+  try {
+    const drivers = await User.find({ role: 'driver' }).select('-password');
+    res.status(200).json({ success: true, drivers });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching drivers', error: error.message });
+  }
+};
 
 exports.getDriverById = async (req, res) => {
   try {
-    const driver = await Driver.findById(req.params.id).populate('user', '-password');
+    const driver = await User.findOne({ _id: req.params.id, role: 'driver' }).select('-password');
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Driver not found' });
     }
@@ -26,22 +24,24 @@ exports.getDriverById = async (req, res) => {
 
 exports.createDriver = async (req, res) => {
   try {
-    const { userId, licenseNumber, experienceYears } = req.body;
+    const { username, email, password, licenseNumber, experienceYears } = req.body;
 
-    // Check if user exists
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid user' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User with this email already exists' });
     }
 
-    const driver = new Driver({
-      user: userId,
+    const newDriver = new User({
+      username,
+      email,
+      password,
+      role: 'driver',
       licenseNumber,
       experienceYears
     });
 
-    await driver.save();
-    res.status(201).json({ success: true, driver });
+    await newDriver.save();
+    res.status(201).json({ success: true, driver: newDriver.toObject({ getters: true, versionKey: false }) });
   } catch (error) {
     res.status(400).json({ success: false, message: 'Error creating driver', error: error.message });
   }
@@ -49,7 +49,13 @@ exports.createDriver = async (req, res) => {
 
 exports.updateDriver = async (req, res) => {
   try {
-    const driver = await Driver.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }).populate('user', '-password');
+    const { licenseNumber, experienceYears, isAvailable } = req.body;
+    const driver = await User.findOneAndUpdate(
+      { _id: req.params.id, role: 'driver' },
+      { licenseNumber, experienceYears, isAvailable },
+      { new: true, runValidators: true }
+    ).select('-password');
+
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Driver not found' });
     }
@@ -61,7 +67,7 @@ exports.updateDriver = async (req, res) => {
 
 exports.deleteDriver = async (req, res) => {
   try {
-    const driver = await Driver.findByIdAndDelete(req.params.id);
+    const driver = await User.findOneAndDelete({ _id: req.params.id, role: 'driver' });
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Driver not found' });
     }
@@ -72,63 +78,105 @@ exports.deleteDriver = async (req, res) => {
 };
 
 exports.updateDriverLocation = async (req, res) => {
-    try {
-      const { latitude, longitude } = req.body;
-      const driver = await User.findOneAndUpdate(
-        { _id: req.params.id, role: 'driver' },
-        { 
-          currentLocation: {
-            type: 'Point',
-            coordinates: [longitude, latitude]
-          }
-        },
-        { new: true, runValidators: true }
-      ).select('-password');
-  
-      if (!driver) {
-        return res.status(404).json({ success: false, message: 'Driver not found' });
-      }
-      res.status(200).json({ success: true, driver });
-    } catch (error) {
-      res.status(400).json({ success: false, message: 'Error updating driver location', error: error.message });
+  try {
+    const { latitude, longitude } = req.body;
+    const driver = await User.findOneAndUpdate(
+      { _id: req.params.id, role: 'driver' },
+      { 
+        currentLocation: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        }
+      },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found' });
     }
-  };
+    res.status(200).json({ success: true, driver });
+  } catch (error) {
+    res.status(400).json({ success: false, message: 'Error updating driver location', error: error.message });
+  }
+};
+
+exports.getDriverLocationByBookingId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log('Received bookingId:', id);
+    const booking = await Booking.findById(id).populate('driver', 'currentLocation');
+    console.log('Found booking:', booking);
+    
+    
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (!booking.driver) {
+      return res.status(404).json({ success: false, message: 'Driver not assigned to this booking' });
+    }
+
+    // Send back the driver's current location
+    const driverLocation = booking.driver.currentLocation.coordinates;
+
+    res.status(200).json({ success: true, driverLocation });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching driver location', error: error.message });
+  }
+};
+
 
 exports.getAvailableDrivers = async (req, res) => {
-    try {
-      const drivers = await User.find({ role: 'driver', isAvailable: true }).select('-password');
-      res.status(200).json({ success: true, drivers });
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Error fetching available drivers', error: error.message });
-    }
-  };
-
-  exports.updateDriverAvailability = async (req, res) => {
-    try {
-      const { isAvailable } = req.body;
-      const driver = await User.findOneAndUpdate(
-        { _id: req.params.id, role: 'driver' },
-        { isAvailable },
-        { new: true, runValidators: true }
-      ).select('-password');
-  
-      if (!driver) {
-        return res.status(404).json({ success: false, message: 'Driver not found' });
-      }
-      res.status(200).json({ success: true, driver });
-    } catch (error) {
-      res.status(400).json({ success: false, message: 'Error updating driver availability', error: error.message });
-    }
-  };
-
-
-exports.getCurrentJobs = async (req, res) => {
   try {
-    const driverId = req.user.id;
-    const currentJobs = await Booking.find({ driver: driverId, status: { $in: ['assigned', 'en_route', 'goods_collected'] } });
-    res.status(200).json({ success: true, jobs: currentJobs });
+    const drivers = await User.find({ role: 'driver', isAvailable: true }).select('-password');
+    res.status(200).json({ success: true, drivers });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching current jobs', error: error.message });
+    res.status(500).json({ success: false, message: 'Error fetching available drivers', error: error.message });
+  }
+};
+
+exports.updateDriverAvailability = async (req, res) => {
+  try {
+    const { isAvailable } = req.body;
+    const driver = await User.findOneAndUpdate(
+      { _id: req.params.id, role: 'driver' },
+      { isAvailable },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found' });
+    }
+    res.status(200).json({ success: true, driver });
+  } catch (error) {
+    res.status(400).json({ success: false, message: 'Error updating driver availability', error: error.message });
+  }
+};
+
+exports.getDriverBookings = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Driver email is required' });
+    }
+
+    const driver = await User.findOne({ email: email, role: 'driver' });
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found' });
+    }
+
+    const bookings = await Booking.find({ driver: driver._id })
+      .populate('user', 'username email')
+      .populate('vehicle', 'make model licensePlate')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, bookings: bookings });
+  } catch (error) {
+    console.error('Error fetching driver bookings:', error);
+    res.status(500).json({ success: false, message: 'Error fetching driver bookings', error: error.message });
   }
 };
 
@@ -147,9 +195,7 @@ exports.updateJobStatus = async (req, res) => {
     await booking.save();
 
     if (status === 'completed') {
-      const driver = await User.findById(driverId);
-      driver.isAvailable = true;
-      await driver.save();
+      await User.findByIdAndUpdate(driverId, { isAvailable: true });
     }
 
     res.status(200).json({ success: true, booking });
@@ -157,6 +203,5 @@ exports.updateJobStatus = async (req, res) => {
     res.status(400).json({ success: false, message: 'Error updating job status', error: error.message });
   }
 };
-
 
 module.exports = exports;

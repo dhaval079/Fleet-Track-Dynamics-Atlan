@@ -11,11 +11,13 @@ const bookingRouter = require('./routes/bookingRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const loggingMiddleware = require('./middleware/loggingMiddleware');
+const schedulerService = require('./services/schedulerService');
 
 
 const PORT = process.env.PORT || 3001;
 const http = require('http');
 const setupWebSocket = require('./websockets/trackingSocket');
+const { authentication } = require('./middleware/authMiddleware');
 
 require('dotenv').config({ path: './.env' });
 
@@ -23,36 +25,27 @@ console.log('REDIS_URL:', process.env.REDIS_URL);
 console.log('MONGO_URL:', process.env.MONGO_URL);
 console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
-// const cluster = require('cluster');
-// const numCPUs = require('os').cpus().length;
-
-// if (cluster.isMaster) {
-//   console.log(`Master ${process.pid} is running`);
-
-//   // Fork workers.
-//   for (let i = 0; i < numCPUs; i++) {
-//     cluster.fork();
-//   }
-
-//   cluster.on('exit', (worker, code, signal) => {
-//     console.log(`worker ${worker.process.pid} died`);
-//     cluster.fork(); // Replace the dead worker
-//   });
-// } else {
-//   // Workers can share any TCP connection
-//   // In this case it is an HTTP server
-//   require('./server');
-//   console.log(`Worker ${process.pid} started`);
-// }
-
 const app = express();
 const server = http.createServer(app);
 const io = setupWebSocket(server);
+schedulerService.init();
+
+
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+  // origin: 'http://localhost:3000', // Your frontend URL
+  // credentials: true,
+  // exposedHeaders: ['X-Log-Entry']
+}));
 app.use(loggingMiddleware);
+// app.get('/api/v2/logs', authentication, (req, res) => {
+//   // Fetch recent logs from your logging system
+//   // This is just a placeholder, replace with your actual log fetching logic
+//   const recentLogs = fetchRecentLogs();
+//   res.json({ logs: recentLogs });
+// });
 
 app.use("/api/v2/auth", authRouter);
 app.use("/api/v2/users", userRouter);

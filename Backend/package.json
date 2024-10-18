@@ -23,8 +23,10 @@
     "ioredis": "^5.4.1",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
     "mongoose": "^8.7.1",
     "node": "^20.18.0",
+    "node-cron": "^3.0.3",
     "redis": "^4.7.0",
     "repopack": "^0.1.42",
     "socket.io": "^4.8.0"

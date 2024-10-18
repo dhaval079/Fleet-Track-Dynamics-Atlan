@@ -32,15 +32,21 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled'],
+    enum: ['scheduled','pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled'],
     default: 'pending'
   },
   price: {
     type: Number,
     required: true
   },
+  scheduledTime: {
+    type: Date,
+    required: false // Make it optional
+  },
   startTime: Date,
   endTime: Date,
+  driverRating: Number,
+  hasIncident: { type: Boolean, default: false },
   createdAt: {
     type: Date,
     default: Date.now
