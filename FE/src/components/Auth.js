@@ -55,6 +55,7 @@ const Auth = () => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('userId', data.user.id);        
+        localStorage.setItem('email', data.user.email);        
         localStorage.setItem('Id', JSON.stringify(data.user.id));
         login(data.user);
         navigate('/');
