@@ -21,7 +21,7 @@ const DriverLocationUpdate = () => {
 
   const fetchCurrentJobs = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/v2/drivers/current-jobs', {
+      const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/current-jobs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const DriverLocationUpdate = () => {
     if (!location || !driverId) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/v2/drivers/update-location/${driverId}`, {
+      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/update-location/${driverId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

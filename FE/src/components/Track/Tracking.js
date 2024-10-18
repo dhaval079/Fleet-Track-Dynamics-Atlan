@@ -61,7 +61,7 @@ const TrackingComponent = () => {
   const fetchRideDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/v2/bookings/${bookingId}`, {
+      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings/${bookingId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -156,7 +156,7 @@ const TrackingComponent = () => {
   const getDriverLocation = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/v2/drivers/current-location/${rideDetails._id}`, {
+      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/current-location/${rideDetails._id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
