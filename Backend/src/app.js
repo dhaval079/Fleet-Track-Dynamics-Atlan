@@ -35,10 +35,10 @@ schedulerService.init();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  // origin: 'http://localhost:3000', // Your frontend URL
-  // credentials: true,
-  // exposedHeaders: ['X-Log-Entry']
+  origin: 'https://fleet-track-dynamics-atlan.vercel.app/', // Replace with your actual frontend URL
+  credentials: true,
 }));
+
 app.use(loggingMiddleware);
 // app.get('/api/v2/logs', authentication, (req, res) => {
 //   // Fetch recent logs from your logging system
@@ -48,6 +48,14 @@ app.use(loggingMiddleware);
 // });
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
+});
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+app.use((req, res, next) => {
+  console.log(`${req.method} request for '${req.url}'`);
+  next();
 });
 
 app.use("/api/v2/auth", authRouter);
@@ -76,9 +84,10 @@ const mongoDB = async () => {
   }
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   mongoDB();
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
+
 
 module.exports = { app, io };
