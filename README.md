@@ -7,7 +7,7 @@ This repository contains the full-stack implementation of a highly scalable on-d
 1. [Technologies Used](#technologies-used)
 2. [Features](#features)
 3. [Backend](#backend)
-   - [Installation](#backend-installation)1
+   - [Installation](#backend-installation)
    - [API Documentation](#api-documentation)
    - [Deployment](#backend-deployment)
    - [Scalability Features](#scalability-features)
@@ -19,7 +19,27 @@ This repository contains the full-stack implementation of a highly scalable on-d
 5. [Contributing](#contributing)
 6. [License](#license)
 
+## Demonstration 
+
+![Logistics Platform Overview](Assets/at1.png)
+![User Interface](Assets/home.png)
+![Logistics Platform Overview](Assets/at2.png)
+![User Interface](Assets/at3.png)
+![Logistics Platform Overview](Assets/at4.png)
+![User Interface](Assets/at5.png)
+![Logistics Platform Overview](Assets/at6.png)
+![User Interface](Assets/at7.png)
+![Logistics Platform Overview](Assets/at8.png)
+![User Interface](Assets/at9.png)
+![Logistics Platform Overview](Assets/at10.png)
+![User Interface](Assets/at11.png)
+![Logistics Platform Overview](Assets/at12.png)
+![User Interface](Assets/at13.png)
+![Logistics Platform Overview](Assets/redis.png)
+![User Interface](Assets/redis2.png)
+
 ## Technologies Used
+
 
 ### Backend
 - Node.js
