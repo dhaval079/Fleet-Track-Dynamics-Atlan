@@ -102,7 +102,7 @@ const BookingComponent = () => {
   };
 
   const initializeSocket = () => {
-    const newSocket = io('http://localhost:3001', {
+    const newSocket = io('https://fleet-track-dynamics-atlan.onrender.com', {
       query: { token: localStorage.getItem('token') }
     });
     setSocket(newSocket);
