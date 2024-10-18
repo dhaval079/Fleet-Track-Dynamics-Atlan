@@ -46,6 +46,9 @@ app.use(loggingMiddleware);
 //   const recentLogs = fetchRecentLogs();
 //   res.json({ logs: recentLogs });
 // });
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
 app.use("/api/v2/auth", authRouter);
 app.use("/api/v2/users", userRouter);
