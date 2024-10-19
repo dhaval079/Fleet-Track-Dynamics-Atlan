@@ -28,7 +28,7 @@ const BookingComponent = () => {
   const [socket, setSocket] = useState(null);
   const [error, setError] = useState(null);
   const [matchedDriver, setMatchedDriver] = useState(null);
-  const [selectionMode, setSelectionMode] = useState('manual'); // 'manual' or 'automated'
+  const [selectionMode, setSelectionMode] = useState('manual');
   const [isScheduleFuture, setIsScheduleFuture] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
@@ -38,6 +38,7 @@ const BookingComponent = () => {
     loadGoogleMapsScript();
     initializeSocket();
     fetchVehicles();
+    fetchDrivers(); // Make sure this is called
     return () => {
       if (socket) {
         socket.disconnect();
@@ -138,6 +139,7 @@ const BookingComponent = () => {
 
   const fetchDrivers = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -151,6 +153,8 @@ const BookingComponent = () => {
     } catch (error) {
       console.error('Error fetching drivers:', error);
       setError('Failed to load drivers. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -253,26 +257,26 @@ const BookingComponent = () => {
     setError(null);
     const origin = originInputRef.current.value;
     const destination = destinationInputRef.current.value;
-  
+
     if (!origin || !destination || !selectedVehicle || (!selectedDriver && selectionMode === 'manual') || (!matchedDriver && selectionMode === 'automated')) {
       setError("Please fill in all required fields");
       setIsLoading(false);
       return;
     }
-  
+
     if (!originInputRef.current.coordinates || !destinationInputRef.current.coordinates) {
       setError("Please select valid locations for both origin and destination");
       setIsLoading(false);
       return;
     }
-  
+
     const finalPrice = parseFloat(userPrice);
     if (isNaN(finalPrice) || finalPrice < parseFloat(estimatedPrice)) {
       setError("Please enter a valid price (must be >= estimated price).");
       setIsLoading(false);
       return;
     }
-  
+
     try {
       const bookingData = {
         userId: localStorage.getItem('userId'),
@@ -288,7 +292,7 @@ const BookingComponent = () => {
         },
         price: finalPrice
       };
-  
+
       if (isScheduleFuture) {
         if (!scheduleDate || !scheduleTime) {
           setError("Please select both date and time for future booking.");
@@ -298,9 +302,9 @@ const BookingComponent = () => {
         const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
         bookingData.scheduledTime = scheduledDateTime.toISOString();
       }
-  
+
       const endpoint = isScheduleFuture ? 'https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings/future' : 'https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings';
-  
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -309,12 +313,12 @@ const BookingComponent = () => {
         },
         body: JSON.stringify(bookingData),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Booking failed');
       }
-  
+
       const data = await response.json();
       if (data.success) {
         alert(`Ride ${isScheduleFuture ? 'scheduled' : 'booked'} successfully! Booking ID: ${data.booking._id}`);
@@ -334,7 +338,7 @@ const BookingComponent = () => {
   const updateMarkerPosition = (location) => {
     if (map && location) {
       const latLng = new window.google.maps.LatLng(location.lat, location.lng);
-      
+
       if (!mapRef.current.marker) {
         mapRef.current.marker = new window.google.maps.Marker({
           map: map,
@@ -343,7 +347,7 @@ const BookingComponent = () => {
       } else {
         mapRef.current.marker.setPosition(latLng);
       }
-      
+
       map.panTo(latLng);
     }
   };
@@ -353,9 +357,9 @@ const BookingComponent = () => {
       <div className="w-1/3 p-6 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6">Book a Ride</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        
-        <select 
-          value={selectedVehicle} 
+
+        <select
+          value={selectedVehicle}
           onChange={(e) => setSelectedVehicle(e.target.value)}
           className="w-full p-2 mb-4 border rounded"
         >
@@ -367,7 +371,7 @@ const BookingComponent = () => {
 
         <input ref={originInputRef} type="text" placeholder="Enter origin" className="w-full p-2 mb-4 border rounded" />
         <input ref={destinationInputRef} type="text" placeholder="Enter destination" className="w-full p-2 mb-4 border rounded" />
-        
+
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -377,7 +381,7 @@ const BookingComponent = () => {
         >
           {isLoading ? 'Calculating...' : 'Calculate Route'}
         </motion.button>
-        
+
         {distance && duration && (
           <div className="mb-4">
             <p className="font-semibold">Distance: {distance}</p>
@@ -399,7 +403,7 @@ const BookingComponent = () => {
           <label className="block mb-2">Selection Mode:</label>
           <div className="flex justify-between">
             <button
-              onClick={() => { setSelectionMode('manual'); fetchDrivers(); }}
+              onClick={() => setSelectionMode('manual')}
               className={`w-1/2 p-2 ${selectionMode === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-200'} rounded-l`}
             >
               Manual
@@ -414,8 +418,8 @@ const BookingComponent = () => {
         </div>
 
         {selectionMode === 'manual' && (
-          <select 
-            value={selectedDriver} 
+          <select
+            value={selectedDriver}
             onChange={(e) => setSelectedDriver(e.target.value)}
             className="w-full p-2 mb-4 border rounded"
           >
@@ -446,7 +450,6 @@ const BookingComponent = () => {
           </div>
         )}
 
-       
         <div className="mb-4">
           <label className="flex items-center">
             <input
@@ -458,7 +461,7 @@ const BookingComponent = () => {
             Schedule for later
           </label>
         </div>
-        
+
         {isScheduleFuture && (
           <div className="mb-4">
             <input

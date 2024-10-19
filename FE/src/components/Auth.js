@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { motion } from 'framer-motion';
@@ -27,45 +27,14 @@ const Auth = () => {
     { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield className="w-8 h-8" />, color: 'bg-purple-500' },
   ];
 
+  useEffect(() => {
+    if (formData.email && formData.password) {
+      handleSubmit({ preventDefault: () => {} });
+    }
+  }, [formData.email, formData.password]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const url = `https://fleet-track-dynamics-atlan.onrender.com/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
-    try {
-      let submitData = { ...formData };
-      
-      if (!isLogin && formData.role === 'driver') {
-        const location = await geocodeAddress(formData.address);
-        submitData.currentLocation = {
-          type: 'Point',
-          coordinates: [location.lng, location.lat]
-        };
-      }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData)
-      });
-      const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('userId', data.user.id);        
-        localStorage.setItem('email', data.user.email);        
-        localStorage.setItem('Id', JSON.stringify(data.user.id));
-        login(data.user);
-        navigate('/');
-      } else {
-        alert(data.message || 'Authentication failed');
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
-      alert('An error occurred during authentication');
-    }
   };
 
   const geocodeAddress = async (address) => {
@@ -88,9 +57,52 @@ const Auth = () => {
     }
   };
 
+  const handleSubmit = async (e, submittedData = formData) => {
+    e.preventDefault();
+    const url = `https://fleet-track-dynamics-atlan.onrender.com/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
+    try {
+      let submitData = { ...submittedData };
+      
+      if (!isLogin && submitData.role === 'driver') {
+        const location = await geocodeAddress(submitData.address);
+        submitData.currentLocation = {
+          type: 'Point',
+          coordinates: [location.lng, location.lat]
+        };
+      }
+
+      console.log('Submitting with data:', submitData);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submitData)
+      });
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (data.success) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', data.user.id);        
+        localStorage.setItem('email', data.user.email);        
+        localStorage.setItem('Id', JSON.stringify(data.user.id));
+        login(data.user);
+        navigate('/');
+      } else {
+        console.error('Authentication failed:', data);
+        alert(data.message || 'Authentication failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert('An error occurred during authentication. Please try again.');
+      // Wait for 1 second and try again
+      setTimeout(() => handleSubmit(e, submittedData), 1000);
+    }
+  };
+
   const handleTestLogin = (email, password) => {
-    setFormData({ ...formData, email, password });
-    handleSubmit({ preventDefault: () => {} });
+    setFormData(prevData => ({ ...prevData, email, password }));
   };
 
   return (

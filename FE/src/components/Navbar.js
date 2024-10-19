@@ -18,7 +18,7 @@ function Navbar() {
 
   if (!user) return null;
 
-  const NavLink = ({ to, children }) => {
+  const NavLink = ({ to, children, onClick }) => {
     const isActive = location.pathname === to;
     return (
       <Link
@@ -28,7 +28,10 @@ function Navbar() {
             ? 'bg-blue-700 text-white'
             : 'text-blue-200 hover:bg-blue-700 hover:text-white'
         } rounded transition duration-300`}
-        onClick={() => setIsOpen(false)}
+        onClick={() => {
+          setIsOpen(false);
+          if (onClick) onClick();
+        }}
       >
         {children}
       </Link>
@@ -63,9 +66,9 @@ function Navbar() {
                   </button>
                   {dropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
-                      <NavLink to="/driver/dashboard">Dashboard</NavLink>
-                      <NavLink to="/driver/update-location">Update Location</NavLink>
-                      <NavLink to="/driver/vehicles">Vehicle Management</NavLink>
+                      <NavLink to="/driver/dashboard" onClick={() => setDropdownOpen(false)}>Dashboard</NavLink>
+                      <NavLink to="/driver/update-location" onClick={() => setDropdownOpen(false)}>Update Location</NavLink>
+                      <NavLink to="/driver/vehicles" onClick={() => setDropdownOpen(false)}>Vehicle Management</NavLink>
                     </div>
                   )}
                 </div>

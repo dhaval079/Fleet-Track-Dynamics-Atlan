@@ -205,7 +205,7 @@ const Home = () => {
             className="bg-white text-blue-600 font-bold py-3 px-8 rounded-full text-lg hover:bg-blue-100 transition duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate('/login')}
           >
             Sign Up Now
           </motion.button>
