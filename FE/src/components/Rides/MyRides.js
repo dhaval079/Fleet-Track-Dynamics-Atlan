@@ -24,7 +24,7 @@ const UserBookings = () => {
         return;
       }
 
-      const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings/userbookings', {
+      const response = await fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/bookings/userbookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

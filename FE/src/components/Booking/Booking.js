@@ -102,7 +102,7 @@ const BookingComponent = () => {
   };
 
   const initializeSocket = () => {
-    const newSocket = io('https://fleet-track-dynamics-atlan.onrender.com', {
+    const newSocket = io('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com', {
       query: { token: localStorage.getItem('token') }
     });
     setSocket(newSocket);
@@ -120,7 +120,7 @@ const BookingComponent = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/vehicles', {
+      const response = await fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/vehicles', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
 
@@ -138,7 +138,7 @@ const BookingComponent = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers', {
+      const response = await fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/drivers', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
 
@@ -213,7 +213,7 @@ const BookingComponent = () => {
         throw new Error('Please select a valid origin from the dropdown');
       }
 
-      const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings/match', {
+      const response = await fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/bookings/match', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -299,7 +299,7 @@ const BookingComponent = () => {
         bookingData.scheduledTime = scheduledDateTime.toISOString();
       }
   
-      const endpoint = isScheduleFuture ? 'https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings/future' : 'https://fleet-track-dynamics-atlan.onrender.com/api/v2/bookings';
+      const endpoint = isScheduleFuture ? 'http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/bookings/future' : 'http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/bookings';
   
       const response = await fetch(endpoint, {
         method: 'POST',

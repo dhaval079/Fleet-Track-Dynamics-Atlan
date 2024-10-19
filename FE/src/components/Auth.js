@@ -33,7 +33,7 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `https://fleet-track-dynamics-atlan.onrender.com/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
+    const url = `http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
     try {
       let submitData = { ...formData };
       

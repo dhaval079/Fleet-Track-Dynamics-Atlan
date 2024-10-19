@@ -19,7 +19,7 @@ const UserProfile = () => {
         // Remove quotes if they're present in the userId
         const cleanUserId = userId.replace(/^"|"$/g, '');
         
-        const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/users/${cleanUserId}`, {
+        const response = await fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/users/${cleanUserId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
