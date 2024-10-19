@@ -33,7 +33,7 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
+    const url = `http://43.204.234.64:3001/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
     try {
       let submitData = { ...formData };
       

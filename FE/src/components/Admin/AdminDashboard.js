@@ -35,20 +35,20 @@ const AdminDashboard = () => {
       const [startDate, endDate] = dateRange;
 
       const responses = await Promise.all([
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/dashboard', { headers }),
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/statistics', { headers }),
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/users', { headers }),
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/drivers', { headers }),
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/vehicles', { headers }),
-        fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
-        fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/revenue-analytics', { 
+        fetch('http://43.204.234.64:3001/api/v2/admin/dashboard', { headers }),
+        fetch('http://43.204.234.64:3001/api/v2/admin/statistics', { headers }),
+        fetch('http://43.204.234.64:3001/api/v2/admin/users', { headers }),
+        fetch('http://43.204.234.64:3001/api/v2/admin/drivers', { headers }),
+        fetch('http://43.204.234.64:3001/api/v2/admin/vehicles', { headers }),
+        fetch(`http://43.204.234.64:3001/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
+        fetch(`http://43.204.234.64:3001/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
+        fetch('http://43.204.234.64:3001/api/v2/admin/revenue-analytics', { 
           method: 'POST', 
           headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify({ startDate: startDate.toISOString(), endDate: endDate.toISOString() })
         }),
-        fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/fleet', { headers }),
-        fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers })
+        fetch('http://43.204.234.64:3001/api/v2/admin/fleet', { headers }),
+        fetch(`http://43.204.234.64:3001/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers })
       ]);
 
       const [

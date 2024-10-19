@@ -14,7 +14,7 @@ const TrackingComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const newSocket = io('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com', {
+    const newSocket = io('http://43.204.234.64:3001', {
       query: { token: localStorage.getItem('token') }
     });
     setSocket(newSocket);
@@ -61,7 +61,7 @@ const TrackingComponent = () => {
   const fetchRideDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/bookings/${bookingId}`, {
+      const response = await fetch(`http://43.204.234.64:3001/api/v2/bookings/${bookingId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -156,7 +156,7 @@ const TrackingComponent = () => {
   const getDriverLocation = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/drivers/current-location/${rideDetails._id}`, {
+      const response = await fetch(`http://43.204.234.64:3001/api/v2/drivers/current-location/${rideDetails._id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

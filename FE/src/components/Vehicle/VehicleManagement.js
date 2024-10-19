@@ -14,7 +14,7 @@ const VehicleManagement = () => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/vehicles/driver/${driverId}`, {
+        const response = await fetch(`http://43.204.234.64:3001/api/v2/vehicles/driver/${driverId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2';
+export const API_BASE_URL = 'http://43.204.234.64:3001/api/v2';

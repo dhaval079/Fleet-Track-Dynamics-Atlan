@@ -21,7 +21,7 @@ const DriverLocationUpdate = () => {
 
   const fetchCurrentJobs = async () => {
     try {
-      const response = await fetch('http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/drivers/current-jobs', {
+      const response = await fetch('http://43.204.234.64:3001/api/v2/drivers/current-jobs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const DriverLocationUpdate = () => {
     if (!location || !driverId) return;
 
     try {
-      const response = await fetch(`http://atlan-load-balancer-1090299753.ap-south-1.elb.amazonaws.com/api/v2/drivers/update-location/${driverId}`, {
+      const response = await fetch(`http://43.204.234.64:3001/api/v2/drivers/update-location/${driverId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
