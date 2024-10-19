@@ -19,7 +19,7 @@ const http = require('http');
 const setupWebSocket = require('./websockets/trackingSocket');
 const { authentication } = require('./middleware/authMiddleware');
 
-require('dotenv').config({ path: './.env' });
+require('dotenv').config()
 
 console.log('REDIS_URL:', process.env.REDIS_URL);
 console.log('MONGO_URL:', process.env.MONGO_URL);
