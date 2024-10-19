@@ -79,7 +79,7 @@ app.get('/', (req, res) => {
 
 const mongoDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URL,{ useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoose.connect("mongodb+srv://dhaval079:eren679999@cluster0.rm7on6v.mongodb.net/Atlan-Transport");
     console.log("MongoDB Database connected Successfully!");
   } catch (err) {
     console.log("Failed to connect to MongoDB:", err);
