@@ -79,7 +79,7 @@ app.get('/', (req, res) => {
 
 const mongoDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URL);
+    await mongoose.connect(process.env.MONGO_URL,{ useNewUrlParser: true, useUnifiedTopology: true });
     console.log("MongoDB Database connected Successfully!");
   } catch (err) {
     console.log("Failed to connect to MongoDB:", err);
