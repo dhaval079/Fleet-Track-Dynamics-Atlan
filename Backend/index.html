@@ -28,7 +28,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             try {
-                const response = await fetch('http://52.66.145.247:3001/api/v2/auth/login', {
+                const response = await apiCall('api/v2/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -75,7 +75,7 @@
             }
             const location = { lat: Math.random() * 90, lng: Math.random() * 180 };
             try {
-                const response = await fetch(`http://52.66.145.247:3001/api/v2/bookings/${bookingId}/location`, {
+                const response = await apiCall(`api/v2/bookings/${bookingId}/location`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -97,7 +97,7 @@
                 return;
             }
             try {
-                const response = await fetch(`http://52.66.145.247:3001/api/v2/bookings/${bookingId}/location`, {
+                const response = await apiCall(`api/v2/bookings/${bookingId}/location`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

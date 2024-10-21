@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-react';
+import { apiCall } from '../../utils/api';
 
 const UserBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -24,11 +25,11 @@ const UserBookings = () => {
         return;
       }
 
-      const response = await fetch('http://52.66.145.247:3001/api/v2/bookings/userbookings', {
+      const response = await apiCall('api/v2/bookings/userbookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ email: userEmail })
       });

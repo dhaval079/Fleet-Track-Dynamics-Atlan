@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { apiCall } from '../../utils/api';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 
@@ -61,9 +62,9 @@ const TrackingComponent = () => {
   const fetchRideDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://52.66.145.247:3001/api/v2/bookings/${bookingId}`, {
+      const response = await apiCall(`api/v2/bookings/${bookingId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       if (!response.ok) throw new Error('Failed to fetch ride details');
@@ -156,9 +157,9 @@ const TrackingComponent = () => {
   const getDriverLocation = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://52.66.145.247:3001/api/v2/drivers/current-location/${rideDetails._id}`, {
+      const response = await apiCall(`api/v2/drivers/current-location/${rideDetails._id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
   

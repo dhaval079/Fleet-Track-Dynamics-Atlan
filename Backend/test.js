@@ -39,7 +39,7 @@ export const geocodeAddress1 = async (address) => {
   console.log("Using API Key:", API_KEY); // Log the API key
 
   try {
-    const response = await fetch(url);
+    const response = await apiCall(url);
     const data = await response.json();
 
     console.log("Geocode API response for:", address, data);

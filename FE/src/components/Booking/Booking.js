@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
 import DatePicker from 'react-datepicker'; // You'll need to install this package
 import "react-datepicker/dist/react-datepicker.css";
+import { apiCall } from '../../utils/api';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 
@@ -121,8 +122,8 @@ const BookingComponent = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('http://52.66.145.247:3001/api/v2/vehicles', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const response = await apiCall('api/v2/vehicles', {
+        // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
 
       if (!response.ok) {
@@ -140,8 +141,8 @@ const BookingComponent = () => {
   const fetchDrivers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://52.66.145.247:3001/api/v2/drivers', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const response = await apiCall('api/v2/drivers', {
+        // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
 
       if (!response.ok) {
@@ -217,11 +218,11 @@ const BookingComponent = () => {
         throw new Error('Please select a valid origin from the dropdown');
       }
 
-      const response = await fetch('http://52.66.145.247:3001/api/v2/bookings/match', {
+      const response = await apiCall('api/v2/bookings/match', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
           userId: localStorage.getItem('userId'),
@@ -303,13 +304,13 @@ const BookingComponent = () => {
         bookingData.scheduledTime = scheduledDateTime.toISOString();
       }
 
-      const endpoint = isScheduleFuture ? 'http://52.66.145.247:3001/api/v2/bookings/future' : 'http://52.66.145.247:3001/api/v2/bookings';
+      const endpoint = isScheduleFuture ? 'api/v2/bookings/future' : 'api/v2/bookings';
 
-      const response = await fetch(endpoint, {
+      const response = await apiCall(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(bookingData),
       });

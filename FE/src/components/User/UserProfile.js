@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserCircle, Truck, MapPin, Mail, Star } from 'lucide-react';
 import Card from '../card';
 import { CardContent, CardHeader, CardTitle } from '../cardContent';
+import { apiCall } from '../../utils/api';
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
@@ -19,9 +20,9 @@ const UserProfile = () => {
         // Remove quotes if they're present in the userId
         const cleanUserId = userId.replace(/^"|"$/g, '');
         
-        const response = await fetch(`http://52.66.145.247:3001/api/v2/users/${cleanUserId}`, {
+        const response = await apiCall(`api/v2/users/${cleanUserId}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
         if (!response.ok) throw new Error('Failed to fetch user data');

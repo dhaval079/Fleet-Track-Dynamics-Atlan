@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiCall } from '../../utils/api';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 
@@ -21,11 +22,11 @@ const DriverLocationUpdate = () => {
 
   const fetchCurrentJobs = async () => {
     try {
-      const response = await fetch('http://52.66.145.247:3001/api/v2/drivers/current-jobs', {
+      const response = await apiCall('api/v2/drivers/current-jobs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ email: driverEmail })
       });
@@ -84,11 +85,11 @@ const DriverLocationUpdate = () => {
     if (!location || !driverId) return;
 
     try {
-      const response = await fetch(`http://52.66.145.247:3001/api/v2/drivers/update-location/${driverId}`, {
+      const response = await apiCall(`api/v2/drivers/update-location/${driverId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
           latitude: location.lat,

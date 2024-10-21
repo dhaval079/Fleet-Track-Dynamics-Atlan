@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Users, Truck, Calendar, DollarSign, TrendingUp, AlertTriangle, Activity, Clock, Star, Map, Settings, FileText, User } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { apiCall } from '../../utils/api';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -30,26 +31,7 @@ const AdminDashboard = () => {
 
   const fetchAllData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
       const [startDate, endDate] = dateRange;
-
-      const responses = await Promise.all([
-        fetch('http://52.66.145.247:3001/api/v2/admin/dashboard', { headers }),
-        fetch('http://52.66.145.247:3001/api/v2/admin/statistics', { headers }),
-        fetch('http://52.66.145.247:3001/api/v2/admin/users', { headers }),
-        fetch('http://52.66.145.247:3001/api/v2/admin/drivers', { headers }),
-        fetch('http://52.66.145.247:3001/api/v2/admin/vehicles', { headers }),
-        fetch(`http://52.66.145.247:3001/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
-        fetch(`http://52.66.145.247:3001/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
-        fetch('http://52.66.145.247:3001/api/v2/admin/revenue-analytics', { 
-          method: 'POST', 
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ startDate: startDate.toISOString(), endDate: endDate.toISOString() })
-        }),
-        fetch('http://52.66.145.247:3001/api/v2/admin/fleet', { headers }),
-        fetch(`http://52.66.145.247:3001/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers })
-      ]);
 
       const [
         dashboardRes,
@@ -62,7 +44,18 @@ const AdminDashboard = () => {
         revenueAnalyticsRes,
         fleetRes,
         tripAnalyticsRes
-      ] = await Promise.all(responses.map(r => r.json()));
+      ] = await Promise.all([
+        apiCall('/api/v2/admin/dashboard'),
+        apiCall('/api/v2/admin/statistics'),
+        apiCall('/api/v2/admin/users'),
+        apiCall('/api/v2/admin/drivers'),
+        apiCall('/api/v2/admin/vehicles'),
+        apiCall(`/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
+        apiCall(`/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
+        apiCall('/api/v2/admin/revenue-analytics', 'POST', { startDate: startDate.toISOString(), endDate: endDate.toISOString() }),
+        apiCall('/api/v2/admin/fleet'),
+        apiCall(`/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
+      ]);
 
       setDashboardData(dashboardRes.data);
       setStatistics(statisticsRes.data);
@@ -80,6 +73,7 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
   if (error) return <div className="text-red-500 text-center">Error: {error}</div>;

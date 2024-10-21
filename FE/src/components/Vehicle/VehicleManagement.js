@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Car, Truck, Calendar, Hexagon, Cpu, Palette } from 'lucide-react';
+import { apiCall } from '../../utils/api';
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -14,9 +15,9 @@ const VehicleManagement = () => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`http://52.66.145.247:3001/api/v2/vehicles/driver/${driverId}`, {
+        const response = await apiCall(`api/v2/vehicles/driver/${driverId}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
         if (!response.ok) throw new Error('Failed to fetch vehicles');

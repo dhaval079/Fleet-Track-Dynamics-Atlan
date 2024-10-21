@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { motion } from 'framer-motion';
 import { User, Truck, Shield, ArrowRight } from 'lucide-react';
+import { apiCall } from '../utils/api';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 
@@ -42,7 +43,7 @@ const Auth = () => {
     const url = `https://maps.gomaps.pro/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
 
     try {
-      const response = await fetch(url);
+      const response = await apiCall(url);
       const data = await response.json();
 
       if (data.status === 'OK' && data.results.length > 0) {
@@ -59,7 +60,7 @@ const Auth = () => {
 
   const handleSubmit = async (e, submittedData = formData) => {
     e.preventDefault();
-    const url = `http://52.66.145.247:3001/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
+    const url = `api/v2/auth/${isLogin ? 'login' : 'signup'}`;
     try {
       let submitData = { ...submittedData };
       
@@ -72,21 +73,22 @@ const Auth = () => {
       }
 
       console.log('Submitting with data:', submitData);
-      const response = await fetch(url, {
+      const response = await apiCall(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify(submitData),
+        credentials: 'include' // Important for handling cookies
       });
       console.log('Response status:', response.status);
       const data = await response.json();
       console.log('Response data:', data);
 
       if (data.success) {
-        localStorage.setItem('token', data.token);
+        // The token is now set as an HTTP-only cookie by the backend
+        // We don't need to manually set it in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('userId', data.user.id);        
         localStorage.setItem('email', data.user.email);        
-        localStorage.setItem('Id', JSON.stringify(data.user.id));
         login(data.user);
         navigate('/');
       } else {
@@ -96,8 +98,6 @@ const Auth = () => {
     } catch (error) {
       console.error('Auth error:', error);
       alert('An error occurred during authentication. Please try again.');
-      // Wait for 1 second and try again
-      setTimeout(() => handleSubmit(e, submittedData), 1000);
     }
   };
 
