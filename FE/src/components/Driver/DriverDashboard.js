@@ -35,7 +35,7 @@ const DriverDashboard = () => {
 
   const fetchDriverInfo = async () => {
     try {
-      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/${driverId}`, {
+      const response = await fetch(`http://52.66.145.247:3001/api/v2/drivers/${driverId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -51,7 +51,7 @@ const DriverDashboard = () => {
 
   const fetchJobs = async () => {
     try {
-        const response = await fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/current-jobs', {
+        const response = await fetch('http://52.66.145.247:3001/api/v2/drivers/current-jobs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ const barChartOptions = {
  
   const toggleAvailability = async () => {
     try {
-      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/${driverId}/availability`, {
+      const response = await fetch(`http://52.66.145.247:3001/api/v2/drivers/${driverId}/availability`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ const barChartOptions = {
 
   const updateJobStatus = async (jobId, newStatus) => {
     try {
-      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/jobs/${jobId}/status`, {
+      const response = await fetch(`http://52.66.145.247:3001/api/v2/drivers/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ const barChartOptions = {
 
   const acceptJob = async (jobId) => {
     try {
-      const response = await fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/drivers/jobs/${jobId}/status`, {
+      const response = await fetch(`http://52.66.145.247:3001/api/v2/drivers/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -35,20 +35,20 @@ const AdminDashboard = () => {
       const [startDate, endDate] = dateRange;
 
       const responses = await Promise.all([
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/dashboard', { headers }),
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/statistics', { headers }),
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/users', { headers }),
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/drivers', { headers }),
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/vehicles', { headers }),
-        fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
-        fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/revenue-analytics', { 
+        fetch('http://52.66.145.247:3001/api/v2/admin/dashboard', { headers }),
+        fetch('http://52.66.145.247:3001/api/v2/admin/statistics', { headers }),
+        fetch('http://52.66.145.247:3001/api/v2/admin/users', { headers }),
+        fetch('http://52.66.145.247:3001/api/v2/admin/drivers', { headers }),
+        fetch('http://52.66.145.247:3001/api/v2/admin/vehicles', { headers }),
+        fetch(`http://52.66.145.247:3001/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
+        fetch(`http://52.66.145.247:3001/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
+        fetch('http://52.66.145.247:3001/api/v2/admin/revenue-analytics', { 
           method: 'POST', 
           headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify({ startDate: startDate.toISOString(), endDate: endDate.toISOString() })
         }),
-        fetch('https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/fleet', { headers }),
-        fetch(`https://fleet-track-dynamics-atlan.onrender.com/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers })
+        fetch('http://52.66.145.247:3001/api/v2/admin/fleet', { headers }),
+        fetch(`http://52.66.145.247:3001/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers })
       ]);
 
       const [

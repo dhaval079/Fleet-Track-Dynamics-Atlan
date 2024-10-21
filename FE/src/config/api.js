@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'https://fleet-track-dynamics-atlan.onrender.com/api/v2';
+export const API_BASE_URL = 'http://52.66.145.247:3001/api/v2';
