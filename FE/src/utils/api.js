@@ -1,7 +1,7 @@
 // utils/api.js
 
-// export const API_BASE_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
-export const API_BASE_URL = 'https://fleet-track-dynamics-atlan.onrender.com/';
+// export const API_BASE_URL = 'http://52.66.145.247:3001';
+export const API_BASE_URL = 'http://52.66.145.247:3001/';
 
 export const apiCall = async (endpoint, method = 'GET', body = null) => {
   try {
