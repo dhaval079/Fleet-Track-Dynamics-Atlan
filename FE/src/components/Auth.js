@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { User, Truck, Shield, ArrowRight } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 
-const BACKEND_URL = 'http://52.66.145.247:3001';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
