@@ -10,6 +10,11 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ success: false, message: 'License number and experience years are required for drivers' });
     }
 
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email already in use' });
+    }
+
     const user = new User({ 
       username, 
       email, 
@@ -47,14 +52,20 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
+    // Set token in HTTP-only cookie
+    res.cookie('token', token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
     res.status(200).json({ 
       success: true, 
-      token, 
       user: { 
         id: user._id, 
         username: user.username, 
         email: user.email,
-        role: user.role  // Include the role in the response
+        role: user.role
       } 
     });
   } catch (error) {
@@ -63,6 +74,7 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
+  res.clearCookie('token');
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
@@ -81,10 +93,39 @@ exports.getMe = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role  // Include the role here as well
+        role: user.role
       }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching user data', error: error.message });
+  }
+};
+
+// New function to refresh token
+exports.refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const newToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.cookie('token', newToken, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
+    res.status(200).json({ success: true, message: 'Token refreshed successfully' });
+  } catch (error) {
+    res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
