@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
-const BACKEND_URL = 'http://52.66.145.247:3001';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 const DriverDashboard = () => {
   const { user } = useAuth();

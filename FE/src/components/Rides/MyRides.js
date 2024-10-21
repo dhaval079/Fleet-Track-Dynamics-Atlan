@@ -14,7 +14,7 @@ const UserBookings = () => {
     fetchUserBookings();
   }, []);
 
-  const BACKEND_URL = 'http://52.66.145.247:3001';
+  const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
   const fetchUserBookings = async () => {
     try {

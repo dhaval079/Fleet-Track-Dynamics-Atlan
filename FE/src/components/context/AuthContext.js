@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
 
-const BACKEND_URL = 'http://52.66.145.247:3001';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
