@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiCall } from '../../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const BACKEND_URL = 'http://52.66.145.247:3001';
 
 const DriverLocationUpdate = () => {
   const [address, setAddress] = useState('');
@@ -13,22 +14,24 @@ const DriverLocationUpdate = () => {
   const [error, setError] = useState(null);
   const autocompleteRef = useRef(null);
   const navigate = useNavigate();
-  const driverId = JSON.parse(localStorage.getItem('user')).id;
-  const driverEmail = JSON.parse(localStorage.getItem('user')).email;
+  const { user } = useAuth();
+
   useEffect(() => {
-    fetchCurrentJobs();
-    loadGoogleMapsScript();
-  }, []);
+    if (user) {
+      fetchCurrentJobs();
+      loadGoogleMapsScript();
+    }
+  }, [user]);
 
   const fetchCurrentJobs = async () => {
     try {
-      const response = await apiCall('api/v2/drivers/current-jobs', {
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-jobs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ email: driverEmail })
+        credentials: 'include',
+        body: JSON.stringify({ email: user.email })
       });
       if (!response.ok) throw new Error('Failed to fetch current jobs');
       const data = await response.json();
@@ -80,33 +83,36 @@ const DriverLocationUpdate = () => {
 
 
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!location || !driverId) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!location || !user) return;
 
-    try {
-      const response = await apiCall(`api/v2/drivers/update-location/${driverId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          latitude: location.lat,
-          longitude: location.lng
-        })
-      });
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/update-location/${user.id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        latitude: location.lat,
+        longitude: location.lng
+      })
+    });
 
-      if (!response.ok) throw new Error('Failed to update location');
+    if (!response.ok) throw new Error('Failed to update location');
 
-      const data = await response.json();
-      alert('Location updated successfully!');
-      navigate('/driver/dashboard');
-    } catch (error) {
-      console.error('Error updating location:', error);
-      alert('Failed to update location. Please try again.');
-    }
+    const data = await response.json();
+    alert('Location updated successfully!');
+    navigate('/driver/dashboard');
+  } catch (error) {
+    console.error('Error updating location:', error);
+    alert('Failed to update location. Please try again.');
+  }
 };
+if (!user) return <div>Please log in to update your location.</div>;
+if (loading) return <div>Loading...</div>;
+if (error) return <div>Error: {error}</div>;
 
   
 

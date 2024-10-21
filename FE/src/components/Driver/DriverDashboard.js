@@ -3,16 +3,15 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
-import { apiCall } from '../../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
+const BACKEND_URL = 'http://52.66.145.247:3001';
+
 const DriverDashboard = () => {
-  const [jobs, setJobs] = useState({
-    active: [],
-    pending: [],
-    incoming: []
-  });
+  const { user } = useAuth();
+  const [jobs, setJobs] = useState({ active: [], pending: [], incoming: [] });
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,22 +23,19 @@ const DriverDashboard = () => {
     jobStatusDistribution: {}
   });
 
-  const user = JSON.parse(localStorage.getItem('user'));
-  const { id: driverId, email: driverEmail } = user;
-
   useEffect(() => {
-    fetchDriverInfo();
-    fetchJobs();
-    const interval = setInterval(fetchJobs, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (user) {
+      fetchDriverInfo();
+      fetchJobs();
+      const interval = setInterval(fetchJobs, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const fetchDriverInfo = async () => {
     try {
-      const response = await apiCall(`api/v2/drivers/${driverId}`, {
-        headers: {
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${user.id}`, {
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch driver info');
       const data = await response.json();
@@ -52,30 +48,31 @@ const DriverDashboard = () => {
 
   const fetchJobs = async () => {
     try {
-        const response = await apiCall('api/v2/drivers/current-jobs', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ email: driverEmail })
-        });
-        if (!response.ok) throw new Error('Failed to fetch jobs');
-        const data = await response.json();
-        
-        const active = data.bookings.filter(job => ['en_route', 'goods_collected'].includes(job.status));
-        const pending = data.bookings.filter(job => job.status === 'pending');
-        const incoming = data.bookings.filter(job => job.status === 'assigned');
-        
-        setJobs({ active, pending, incoming });
-        calculateAnalytics(data.bookings); // Ensure this is called after setting jobs
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email: user.email })
+      });
+      if (!response.ok) throw new Error('Failed to fetch jobs');
+      const data = await response.json();
+      
+      const active = data.bookings.filter(job => ['en_route', 'goods_collected'].includes(job.status));
+      const pending = data.bookings.filter(job => job.status === 'pending');
+      const incoming = data.bookings.filter(job => job.status === 'assigned');
+      
+      setJobs({ active, pending, incoming });
+      calculateAnalytics(data.bookings);
     } catch (error) {
-        console.error('Error fetching jobs:', error);
-        setError('Failed to load jobs');
+      console.error('Error fetching jobs:', error);
+      setError('Failed to load jobs');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
+
 
 
   const calculateAnalytics = (bookings) => {
@@ -145,33 +142,34 @@ const barChartOptions = {
 };
 
  
-  const toggleAvailability = async () => {
-    try {
-      const response = await apiCall(`api/v2/drivers/${driverId}/availability`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ isAvailable: !isAvailable })
-      });
-      if (!response.ok) throw new Error('Failed to update availability');
-      const data = await response.json();
-      setIsAvailable(data.driver.isAvailable);
-    } catch (error) {
-      console.error('Error updating availability:', error);
-      alert('Failed to update availability');
-    }
-  };
+const toggleAvailability = async () => {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${user.id}/availability`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ isAvailable: !isAvailable })
+    });
+    if (!response.ok) throw new Error('Failed to update availability');
+    const data = await response.json();
+    setIsAvailable(data.driver.isAvailable);
+  } catch (error) {
+    console.error('Error updating availability:', error);
+    alert('Failed to update availability');
+  }
+};
 
   const updateJobStatus = async (jobId, newStatus) => {
     try {
-      const response = await apiCall(`api/v2/drivers/jobs/${jobId}/status`, {
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({ status: newStatus })
       });
       if (!response.ok) throw new Error('Failed to update job status');
@@ -184,12 +182,13 @@ const barChartOptions = {
 
   const acceptJob = async (jobId) => {
     try {
-      const response = await apiCall(`api/v2/drivers/jobs/${jobId}/status`, {
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({ status: 'assigned' })
       });
       if (!response.ok) throw new Error('Failed to accept job');

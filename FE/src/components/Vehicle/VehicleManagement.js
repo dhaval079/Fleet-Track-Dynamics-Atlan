@@ -1,37 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Car, Truck, Calendar, Hexagon, Cpu, Palette } from 'lucide-react';
-import { apiCall } from '../../utils/api';
+import { useAuth } from '../context/AuthContext';
+
+const BACKEND_URL = 'http://52.66.145.247:3001';
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  
-  const user = JSON.parse(localStorage.getItem('user'));
-  const { id: driverId, email: driverEmail } = user;
+  const { user } = useAuth();
   
   useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        const response = await apiCall(`api/v2/vehicles/driver/${driverId}`, {
-          headers: {
-            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch vehicles');
-        const data = await response.json();
-        setVehicles(data.vehicles);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (user) {
+      fetchVehicles();
+    }
+  }, [user]);
 
-    fetchVehicles();
-  }, [driverId]);
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v2/vehicles/driver/${user.id}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch vehicles');
+      const data = await response.json();
+      setVehicles(data.vehicles);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getVehicleIcon = (type) => {
     switch (type) {
@@ -46,8 +45,10 @@ const VehicleManagement = () => {
     }
   };
 
+  if (!user) return <div>Please log in to view your vehicles.</div>;
   if (loading) return <div className="flex justify-center items-center h-64">Loading...</div>;
   if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">

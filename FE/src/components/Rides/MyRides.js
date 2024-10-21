@@ -14,6 +14,8 @@ const UserBookings = () => {
     fetchUserBookings();
   }, []);
 
+  const BACKEND_URL = 'http://52.66.145.247:3001';
+
   const fetchUserBookings = async () => {
     try {
       setLoading(true);
@@ -25,12 +27,13 @@ const UserBookings = () => {
         return;
       }
 
-      const response = await apiCall('api/v2/bookings/userbookings', {
+      const response = await fetch(`${BACKEND_URL}/api/v2/bookings/userbookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({ email: userEmail })
       });
 

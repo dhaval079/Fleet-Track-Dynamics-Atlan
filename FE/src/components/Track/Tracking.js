@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { apiCall } from '../../utils/api';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const BACKEND_URL = 'http://52.66.145.247:3001';
 
 const TrackingComponent = () => {
   const [bookingId, setBookingId] = useState('');
@@ -15,8 +16,9 @@ const TrackingComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const newSocket = io('http://52.66.145.247:3001', {
-      query: { token: localStorage.getItem('token') }
+    const newSocket = io(BACKEND_URL, {
+      // query: { token: localStorage.getItem('token') }
+      withCredentials: true
     });
     setSocket(newSocket);
     return () => newSocket.close();
@@ -62,10 +64,11 @@ const TrackingComponent = () => {
   const fetchRideDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await apiCall(`api/v2/bookings/${bookingId}`, {
-        headers: {
+      const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
+        // headers: {
           // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        // }
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch ride details');
       const data = await response.json();
@@ -157,10 +160,8 @@ const TrackingComponent = () => {
   const getDriverLocation = async () => {
     setIsLoading(true);
     try {
-      const response = await apiCall(`api/v2/drivers/current-location/${rideDetails._id}`, {
-        headers: {
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-location/${rideDetails._id}`, {
+        credentials: 'include'
       });
   
       if (!response.ok) throw new Error('Failed to fetch driver location');

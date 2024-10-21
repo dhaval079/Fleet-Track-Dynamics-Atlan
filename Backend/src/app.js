@@ -39,7 +39,7 @@ app.use(cors({
   credentials: true,
 }));
 // app.use(cors({
-//   origin: '*', // Replace with your actual frontend URL
+//   origin: 'http://localhost:3000', // or your frontend URL
 //   credentials: true,
 // }));
 

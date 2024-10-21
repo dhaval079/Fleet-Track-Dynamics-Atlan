@@ -10,6 +10,8 @@ import { apiCall } from '../../utils/api';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
+  const BACKEND_URL = 'http://52.66.145.247:3001';
+
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardData, setDashboardData] = useState(null);
   const [statistics, setStatistics] = useState(null);
@@ -29,10 +31,21 @@ const AdminDashboard = () => {
     fetchAllData();
   }, [dateRange]);
 
+
+
   const fetchAllData = async () => {
     try {
       const [startDate, endDate] = dateRange;
-
+  
+      const fetchData = async (url, options = {}) => {
+        const response = await fetch(`${BACKEND_URL}${url}`, {
+          ...options,
+          credentials: 'include'
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      };
+  
       const [
         dashboardRes,
         statisticsRes,
@@ -45,18 +58,22 @@ const AdminDashboard = () => {
         fleetRes,
         tripAnalyticsRes
       ] = await Promise.all([
-        apiCall('/api/v2/admin/dashboard'),
-        apiCall('/api/v2/admin/statistics'),
-        apiCall('/api/v2/admin/users'),
-        apiCall('/api/v2/admin/drivers'),
-        apiCall('/api/v2/admin/vehicles'),
-        apiCall(`/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
-        apiCall(`/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
-        apiCall('/api/v2/admin/revenue-analytics', 'POST', { startDate: startDate.toISOString(), endDate: endDate.toISOString() }),
-        apiCall('/api/v2/admin/fleet'),
-        apiCall(`/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
+        fetchData('/api/v2/admin/dashboard'),
+        fetchData('/api/v2/admin/statistics'),
+        fetchData('/api/v2/admin/users'),
+        fetchData('/api/v2/admin/drivers'),
+        fetchData('/api/v2/admin/vehicles'),
+        fetchData(`/api/v2/admin/driver-activity?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
+        fetchData(`/api/v2/admin/booking-data?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
+        fetchData('/api/v2/admin/revenue-analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ startDate: startDate.toISOString(), endDate: endDate.toISOString() })
+        }),
+        fetchData('/api/v2/admin/fleet'),
+        fetchData(`/api/v2/admin/trip-analytics?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
       ]);
-
+  
       setDashboardData(dashboardRes.data);
       setStatistics(statisticsRes.data);
       setUsers(usersRes.data);

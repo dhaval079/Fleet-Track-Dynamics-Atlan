@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './Pages/Home';
@@ -15,7 +15,22 @@ import DriverLocationUpdate from './components/Driver/DriverLocationUpdate';
 import VehicleManagement from './components/Vehicle/VehicleManagement';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user } = useAuth();
+  const { user, checkAuthStatus } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+
+  useEffect(() => {
+    const verifyAuth = async () => {
+      await checkAuthStatus();
+      setLoading(false);
+    };
+    verifyAuth();
+  }, [checkAuthStatus]);
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a loading spinner
+  }
+
   if (!user) {
     return <Navigate to="/login" />;
   }

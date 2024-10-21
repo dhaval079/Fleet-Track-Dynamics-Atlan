@@ -1,46 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { UserCircle, Truck, MapPin, Mail, Star } from 'lucide-react';
 import Card from '../card';
 import { CardContent, CardHeader, CardTitle } from '../cardContent';
-import { apiCall } from '../../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const UserProfile = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        if (!userId) {
-          throw new Error('User ID not found in localStorage');
-        }
-        
-        // Remove quotes if they're present in the userId
-        const cleanUserId = userId.replace(/^"|"$/g, '');
-        
-        const response = await apiCall(`api/v2/users/${cleanUserId}`, {
-          headers: {
-            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch user data');
-        const userData = await response.json();
-        setUser(userData.user);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+  const { user, loading } = useAuth();
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!user) return <div>User not found</div>;
+  if (!user) return <div>User not found. Please log in.</div>;
 
   return (
     <div className="container mx-auto p-4">
@@ -59,7 +27,9 @@ const UserProfile = () => {
               <>
                 <p className="flex items-center"><Truck className="w-4 h-4 mr-2" /> License: {user.licenseNumber}</p>
                 <p className="flex items-center"><Star className="w-4 h-4 mr-2" /> Experience: {user.experienceYears} years</p>
-                <p className="flex items-center"><MapPin className="w-4 h-4 mr-2" /> Location: {user.currentLocation.coordinates.join(', ')}</p>
+                {user.currentLocation && (
+                  <p className="flex items-center"><MapPin className="w-4 h-4 mr-2" /> Location: {user.currentLocation.coordinates.join(', ')}</p>
+                )}
                 <p className="flex items-center"><Star className="w-4 h-4 mr-2" /> Available: {user.isAvailable ? 'Yes' : 'No'}</p>
               </>
             )}

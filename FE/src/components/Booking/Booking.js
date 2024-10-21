@@ -4,14 +4,18 @@ import { io } from 'socket.io-client';
 import DatePicker from 'react-datepicker'; // You'll need to install this package
 import "react-datepicker/dist/react-datepicker.css";
 import { apiCall } from '../../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const BACKEND_URL = 'http://52.66.145.247:3001';
+
 
 const BookingComponent = () => {
   const mapRef = useRef(null);
   const originInputRef = useRef(null);
   const destinationInputRef = useRef(null);
 
+  const { user } = useAuth();
   const [map, setMap] = useState(null);
   const [directionsService, setDirectionsService] = useState(null);
   const [directionsRenderer, setDirectionsRenderer] = useState(null);
@@ -105,8 +109,10 @@ const BookingComponent = () => {
 
   const initializeSocket = () => {
     const newSocket = io('http://52.66.145.247:3001', {
-      query: { token: localStorage.getItem('token') }
+      // query: { token: localStorage.getItem('token') }
+      withCredentials: true
     });
+    
     setSocket(newSocket);
 
     newSocket.on('locationUpdate', (location) => {
@@ -122,8 +128,10 @@ const BookingComponent = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await apiCall('api/v2/vehicles', {
+      const response = await fetch(`${BACKEND_URL}/api/v2/vehicles`, {
         // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
+
       });
 
       if (!response.ok) {
@@ -141,8 +149,9 @@ const BookingComponent = () => {
   const fetchDrivers = async () => {
     try {
       setIsLoading(true);
-      const response = await apiCall('api/v2/drivers', {
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers`, {
         // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -214,18 +223,21 @@ const BookingComponent = () => {
     setIsLoading(true);
     setError(null);
     try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
       if (!originInputRef.current.coordinates) {
         throw new Error('Please select a valid origin from the dropdown');
       }
 
-      const response = await apiCall('api/v2/bookings/match', {
+      const response = await fetch(`${BACKEND_URL}/api/v2/bookings/match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({
-          userId: localStorage.getItem('userId'),
+          userId: user.id, // Use the id from the authenticated user object
           pickup: {
             address: originInputRef.current.value,
             coordinates: originInputRef.current.coordinates
@@ -304,14 +316,15 @@ const BookingComponent = () => {
         bookingData.scheduledTime = scheduledDateTime.toISOString();
       }
 
-      const endpoint = isScheduleFuture ? 'api/v2/bookings/future' : 'api/v2/bookings';
+      const endpoint = isScheduleFuture ? '/api/v2/bookings/future' : '/api/v2/bookings';
 
-      const response = await apiCall(endpoint, {
+      const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify(bookingData),
       });
 

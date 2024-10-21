@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
 import { motion } from 'framer-motion';
 import { User, Truck, Shield, ArrowRight } from 'lucide-react';
-import { apiCall } from '../utils/api';
+import { useAuth } from './context/AuthContext';
 
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const BACKEND_URL = 'http://52.66.145.247:3001';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,6 +18,8 @@ const Auth = () => {
     phoneNumber: '',
     address: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -28,87 +29,69 @@ const Auth = () => {
     { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield className="w-8 h-8" />, color: 'bg-purple-500' },
   ];
 
-  useEffect(() => {
-    if (formData.email && formData.password) {
-      handleSubmit({ preventDefault: () => {} });
-    }
-  }, [formData.email, formData.password]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const geocodeAddress = async (address) => {
-    const encodedAddress = encodeURIComponent(address);
-    const url = `https://maps.gomaps.pro/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
-
-    try {
-      const response = await apiCall(url);
-      const data = await response.json();
-
-      if (data.status === 'OK' && data.results.length > 0) {
-        const location = data.results[0].geometry.location;
-        return { lat: location.lat, lng: location.lng };
-      } else {
-        throw new Error('Geocoding failed');
-      }
-    } catch (error) {
-      console.error('Geocoding error:', error);
-      throw error;
-    }
-  };
-
-  const handleSubmit = async (e, submittedData = formData) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `api/v2/auth/${isLogin ? 'login' : 'signup'}`;
-    try {
-      let submitData = { ...submittedData };
-      
-      if (!isLogin && submitData.role === 'driver') {
-        const location = await geocodeAddress(submitData.address);
-        submitData.currentLocation = {
-          type: 'Point',
-          coordinates: [location.lng, location.lat]
-        };
-      }
+    setLoading(true);
+    setError(null);
 
-      console.log('Submitting with data:', submitData);
-      const response = await apiCall(url, {
+    try {
+      const url = `${BACKEND_URL}/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
-        credentials: 'include' // Important for handling cookies
+        body: JSON.stringify(isLogin ? { email: formData.email, password: formData.password } : formData),
+        credentials: 'include'
       });
-      console.log('Response status:', response.status);
+
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (data.success) {
-        // The token is now set as an HTTP-only cookie by the backend
-        // We don't need to manually set it in localStorage
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('userId', data.user.id);        
-        localStorage.setItem('email', data.user.email);        
-        login(data.user);
+        await login(formData.email, formData.password);
         navigate('/');
       } else {
-        console.error('Authentication failed:', data);
-        alert(data.message || 'Authentication failed. Please try again.');
+        setError(data.message || 'Authentication failed');
       }
     } catch (error) {
       console.error('Auth error:', error);
-      alert('An error occurred during authentication. Please try again.');
+      setError('An error occurred during authentication');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleTestLogin = (email, password) => {
-    setFormData(prevData => ({ ...prevData, email, password }));
+  const handleTestLogin = async (email, password) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const success = await login(email, password);
+      if (success) {
+        navigate('/');
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Test login error:', error);
+      setError('An error occurred during test login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-6xl mx-auto mt-10 px-4">
       <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Welcome to Ride Sharing</h1>
       
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
       <div className="mb-12">
         <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">Test Accounts</h2>
         <p className="text-center text-gray-600 mb-6">Use these accounts to explore different user roles</p>
@@ -130,9 +113,10 @@ const Auth = () => {
                 <button
                   onClick={() => handleTestLogin(account.email, account.password)}
                   className="w-full bg-white text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-100 transition duration-300 flex items-center justify-center"
+                  disabled={loading}
                 >
-                  Login as {account.role}
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  {loading ? 'Logging in...' : `Login as ${account.role}`}
+                  {!loading && <ArrowRight className="ml-2 w-4 h-4" />}
                 </button>
               </div>
             </motion.div>
@@ -224,8 +208,12 @@ const Auth = () => {
               )}
             </>
           )}
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
-            {isLogin ? 'Login' : 'Sign Up'}
+          <button 
+            type="submit" 
+            className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
           </button>
         </form>
         <p className="mt-4 text-center">
