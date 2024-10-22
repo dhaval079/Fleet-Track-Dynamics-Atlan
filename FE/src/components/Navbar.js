@@ -21,21 +21,42 @@ const NavLink = memo(({ to, children, onClick }) => {
   );
 });
 
-const Navbar = memo(() => {
+NavLink.displayName = 'NavLink';
+
+const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = useCallback(async () => {
-    await logout();
-    navigate('/login');
-  }, [logout, navigate]);
+    try {
+      await logout();
+      window.location.reload();
+      window.location.href = '/login';
 
-  const toggleMenu = useCallback(() => setIsOpen(prev => !prev), []);
-  const toggleDropdown = useCallback(() => setDropdownOpen(prev => !prev), []);
+      // navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, [logout]);
 
-  if (!user) return null;
+  const toggleMenu = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const toggleDropdown = useCallback(() => {
+    setDropdownOpen(prev => !prev);
+  }, []);
+
+  const closeMenus = useCallback(() => {
+    setIsOpen(false);
+    setDropdownOpen(false);
+  }, []);
+
+  // Verify user and token exist before rendering
+  const token = localStorage.getItem('token');
+  if (!user || !token) return null;
 
   return (
     <nav className="bg-blue-600 shadow-lg">
@@ -48,11 +69,11 @@ const Navbar = memo(() => {
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <NavLink to="/">Home</NavLink>
+              <NavLink to="/" onClick={closeMenus}>Home</NavLink>
               {user.role === 'customer' && (
                 <>
-                  <NavLink to="/book">Book a Ride</NavLink>
-                  <NavLink to="/rides">My Rides</NavLink>
+                  <NavLink to="/book" onClick={closeMenus}>Book a Ride</NavLink>
+                  <NavLink to="/rides" onClick={closeMenus}>My Rides</NavLink>
                 </>
               )}
               {user.role === 'driver' && (
@@ -65,18 +86,18 @@ const Navbar = memo(() => {
                   </button>
                   {dropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
-                      <NavLink to="/driver/dashboard" onClick={toggleDropdown}>Dashboard</NavLink>
-                      <NavLink to="/driver/update-location" onClick={toggleDropdown}>Update Location</NavLink>
-                      <NavLink to="/driver/vehicles" onClick={toggleDropdown}>Vehicle Management</NavLink>
+                      <NavLink to="/driver/dashboard" onClick={closeMenus}>Dashboard</NavLink>
+                      <NavLink to="/driver/update-location" onClick={closeMenus}>Update Location</NavLink>
+                      <NavLink to="/driver/vehicles" onClick={closeMenus}>Vehicle Management</NavLink>
                     </div>
                   )}
                 </div>
               )}
               {user.role === 'admin' && (
-                <NavLink to="/admin">Admin Dashboard</NavLink>
+                <NavLink to="/admin" onClick={closeMenus}>Admin Dashboard</NavLink>
               )}
-              <NavLink to="/profile">Profile</NavLink>
-              <NavLink to="/tracking">Track Ride</NavLink>
+              <NavLink to="/profile" onClick={closeMenus}>Profile</NavLink>
+              <NavLink to="/tracking" onClick={closeMenus}>Track Ride</NavLink>
             </div>
           </div>
           <div className="hidden md:block">
@@ -101,25 +122,25 @@ const Navbar = memo(() => {
       {isOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <NavLink to="/" onClick={toggleMenu}>Home</NavLink>
+            <NavLink to="/" onClick={closeMenus}>Home</NavLink>
             {user.role === 'customer' && (
               <>
-                <NavLink to="/book" onClick={toggleMenu}>Book a Ride</NavLink>
-                <NavLink to="/rides" onClick={toggleMenu}>My Rides</NavLink>
+                <NavLink to="/book" onClick={closeMenus}>Book a Ride</NavLink>
+                <NavLink to="/rides" onClick={closeMenus}>My Rides</NavLink>
               </>
             )}
             {user.role === 'driver' && (
               <>
-                <NavLink to="/driver/dashboard" onClick={toggleMenu}>Driver Dashboard</NavLink>
-                <NavLink to="/driver/update-location" onClick={toggleMenu}>Update Location</NavLink>
-                <NavLink to="/driver/vehicles" onClick={toggleMenu}>Vehicle Management</NavLink>
+                <NavLink to="/driver/dashboard" onClick={closeMenus}>Driver Dashboard</NavLink>
+                <NavLink to="/driver/update-location" onClick={closeMenus}>Update Location</NavLink>
+                <NavLink to="/driver/vehicles" onClick={closeMenus}>Vehicle Management</NavLink>
               </>
             )}
             {user.role === 'admin' && (
-              <NavLink to="/admin" onClick={toggleMenu}>Admin Dashboard</NavLink>
+              <NavLink to="/admin" onClick={closeMenus}>Admin Dashboard</NavLink>
             )}
-            <NavLink to="/profile" onClick={toggleMenu}>Profile</NavLink>
-            <NavLink to="/tracking" onClick={toggleMenu}>Track Ride</NavLink>
+            <NavLink to="/profile" onClick={closeMenus}>Profile</NavLink>
+            <NavLink to="/tracking" onClick={closeMenus}>Track Ride</NavLink>
           </div>
           <div className="pt-4 pb-3 border-t border-blue-700">
             <div className="px-2">
@@ -135,6 +156,8 @@ const Navbar = memo(() => {
       )}
     </nav>
   );
-});
+};
 
-export default Navbar;
+Navbar.displayName = 'Navbar';
+
+export default memo(Navbar);

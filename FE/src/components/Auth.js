@@ -33,15 +33,37 @@ const Auth = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const storeUserData = (userData) => {
+  const storeUserData = (data) => {
     // Clear any existing data
     localStorage.clear();
 
     // Store user data
-    localStorage.setItem('userId', userData.user.id);
-    localStorage.setItem('email', userData.user.email);
-    localStorage.setItem('role', userData.user.role);
-    localStorage.setItem('username', userData.user.username);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userId', data.user.id);
+    localStorage.setItem('email', data.user.email);
+    localStorage.setItem('role', data.user.role);
+    localStorage.setItem('username', data.user.username);
+  };
+
+  const processAuthResponse = async (data) => {
+    if (data.success && data.token && data.user) {
+      storeUserData(data);
+      await login(data.user);
+
+      // Navigate based on role
+      switch (data.user.role) {
+        case 'driver':
+          navigate('/', { replace: true });
+          break;
+        case 'admin':
+          navigate('/', { replace: true });
+          break;
+        default:
+          navigate('/', { replace: true });
+      }
+    } else {
+      throw new Error(data.message || 'Authentication failed');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -51,36 +73,26 @@ const Auth = () => {
 
     try {
       const url = `${BACKEND_URL}/api/v2/auth/${isLogin ? 'login' : 'signup'}`;
+      const requestData = isLogin ? 
+        { email: formData.email, password: formData.password } : 
+        formData;
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isLogin ? { 
-          email: formData.email, 
-          password: formData.password 
-        } : formData),
-        credentials: 'include'
+        body: JSON.stringify(requestData)
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        storeUserData(data);
-        await login(formData.email, formData.password);
-        
-        // Navigate based on role
-        if (data.user.role === 'driver') {
-          navigate('/driver/dashboard');
-        } else if (data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      } else {
-        setError(data.message || 'Authentication failed');
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed');
       }
+
+      await processAuthResponse(data);
     } catch (error) {
       console.error('Auth error:', error);
-      setError('An error occurred during authentication');
+      setError(error.message || 'An error occurred during authentication');
     } finally {
       setLoading(false);
     }
@@ -94,30 +106,19 @@ const Auth = () => {
       const response = await fetch(`${BACKEND_URL}/api/v2/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
+        body: JSON.stringify({ email, password })
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        storeUserData(data);
-        await login(email, password);
-        
-        // Navigate based on role
-        if (data.user.role === 'driver') {
-          navigate('/driver/dashboard', { replace: true });
-        } else if (data.user.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
-      } else {
-        setError('Login failed. Please check your credentials.');
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
       }
+
+      await processAuthResponse(data);
     } catch (error) {
       console.error('Test login error:', error);
-      setError('An error occurred during test login');
+      setError(error.message || 'An error occurred during test login');
     } finally {
       setLoading(false);
     }
@@ -125,19 +126,23 @@ const Auth = () => {
 
   return (
     <div className="max-w-6xl mx-auto mt-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Welcome to Ride Sharing</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Welcome to Fleet Track Dynamics</h1>
       
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded"
+        >
           {error}
-        </div>
+        </motion.div>
       )}
 
       <div className="mb-12">
         <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">Test Accounts</h2>
         <p className="text-center text-gray-600 mb-6">Use these accounts to explore different user roles</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testAccounts.map((account, index) => (
+          {testAccounts.map((account) => (
             <motion.div
               key={account.role}
               className={`${account.color} rounded-lg shadow-lg overflow-hidden`}
@@ -164,6 +169,7 @@ const Auth = () => {
           ))}
         </div>
       </div>
+
 
       <div className="bg-white p-8 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-5 text-center">{isLogin ? 'Login' : 'Sign Up'}</h2>

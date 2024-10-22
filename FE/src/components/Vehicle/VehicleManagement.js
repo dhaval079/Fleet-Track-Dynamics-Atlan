@@ -1,37 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Car, Truck, Calendar, Hexagon, Cpu, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
-const driverId = localStorage.getItem('userId');
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
-  
-  useEffect(() => {
-    if (user) {
-      fetchVehicles();
-    }
-  }, [user]);
 
-  const fetchVehicles = async () => {
+  const fetchVehicles = useCallback(async () => {
+    const driverId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+
+    if (!driverId || !token) {
+      throw new Error('Authentication required');
+    }
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/vehicles/driver/${driverId}`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
-      if (!response.ok) throw new Error('Failed to fetch vehicles');
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Session expired');
+        }
+        throw new Error('Failed to fetch vehicles');
+      }
+
       const data = await response.json();
+      if (data.success === false) {
+        throw new Error(data.message || 'Failed to fetch vehicles');
+      }
+
       setVehicles(data.vehicles);
-    } catch (err) {
-      setError(err.message);
+      return true;
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      throw error;
+    }
+  }, []);
+
+  const initializeData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await fetchVehicles();
+    } catch (error) {
+      console.error('Initialization error:', error);
+      setError(error.message || 'Failed to load vehicles');
+      return false;
     } finally {
       setLoading(false);
     }
-  };
+
+    return true;
+  }, [fetchVehicles]);
+
+  useEffect(() => {
+    if (user?.email && localStorage.getItem('token')) {
+      initializeData();
+    }
+  }, [user?.email, initializeData]);
 
   const getVehicleIcon = (type) => {
     switch (type) {
@@ -46,10 +83,35 @@ const VehicleManagement = () => {
     }
   };
 
-  if (!user) return <div>Please log in to view your vehicles.</div>;
-  if (loading) return <div className="flex justify-center items-center h-64">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  if (!user?.email || !localStorage.getItem('token')) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-red-500 text-xl">Please log in to view your vehicles</div>
+      </div>
+    );
+  }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <div className="text-red-500 text-xl mb-4">{error}</div>
+        <button 
+          onClick={initializeData}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -65,11 +127,15 @@ const VehicleManagement = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 {getVehicleIcon(vehicle.vehicleType)}
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${vehicle.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  vehicle.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
                   {vehicle.isAvailable ? 'Available' : 'In Use'}
                 </span>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">{vehicle.make} {vehicle.model}</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                {vehicle.make} {vehicle.model}
+              </h2>
               <div className="space-y-2">
                 <div className="flex items-center text-gray-600">
                   <Calendar className="w-5 h-5 mr-2" />

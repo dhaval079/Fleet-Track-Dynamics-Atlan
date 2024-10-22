@@ -44,19 +44,16 @@ app.use(cors({
 // }));
 app.use(cookieParser());
 app.use(loggingMiddleware);
-// app.get('/api/v2/logs', authentication, (req, res) => {
-//   // Fetch recent logs from your logging system
-//   // This is just a placeholder, replace with your actual log fetching logic
-//   const recentLogs = fetchRecentLogs();
-//   res.json({ logs: recentLogs });
-// });
+
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
+
 app.use((req, res, next) => {
   console.log(`${req.method} request for '${req.url}'`);
   next();

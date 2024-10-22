@@ -30,8 +30,8 @@ const DriverLocationUpdate = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        credentials: 'include',
         body: JSON.stringify({ email: user.email })
       });
       if (!response.ok) throw new Error('Failed to fetch current jobs');
@@ -93,8 +93,8 @@ const handleSubmit = async (e) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
-      credentials: 'include',
       body: JSON.stringify({
         latitude: location.lat,
         longitude: location.lng

@@ -16,13 +16,14 @@ import VehicleManagement from './components/Vehicle/VehicleManagement';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
+  const token = localStorage.getItem('token');
 
-  if (!user) {
-    return <Navigate to="/login" />;
+  if (!user || !token) {
+    return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/error" />;
+    return <Navigate to="/error" replace />;
   }
 
   return children;
@@ -31,10 +32,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 // Separate layout component that uses useAuth
 const AppLayout = () => {
   const { user } = useAuth();
+  const token = localStorage.getItem('token');
 
+  // Only show navbar if both user and token exist
   return (
     <div className="flex flex-col min-h-screen">
-      {user && <Navbar />}
+      {user && token && <Navbar />}
       <main className="flex-grow container mx-auto">
         <AppRoutes />
       </main>
@@ -47,12 +50,15 @@ const AppLayout = () => {
 
 function AppRoutes() {
   const { user } = useAuth();
-
+  const token = localStorage.getItem('token');
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" /> : <Auth />} />
+      <Route
+        path="/login"
+        element={(user && token) ? <Navigate to="/" replace /> : <Auth />}
+      />
       <Route path="/error" element={<ErrorPage />} />
-      
+
       {/* Protected Routes */}
       <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

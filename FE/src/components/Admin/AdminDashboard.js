@@ -40,8 +40,10 @@ const AdminDashboard = () => {
       const fetchData = async (url, options = {}) => {
         const response = await fetch(`${BACKEND_URL}${url}`, {
           ...options,
-          credentials: 'include'
-        });
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }        
+            });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.json();
       };

@@ -17,8 +17,8 @@ const TrackingComponent = () => {
 
   useEffect(() => {
     const newSocket = io(BACKEND_URL, {
-      // query: { token: localStorage.getItem('token') }
-      withCredentials: true
+      query: { token: localStorage.getItem('token') }
+      // withCredentials: true
     });
     setSocket(newSocket);
     return () => newSocket.close();
@@ -65,10 +65,10 @@ const TrackingComponent = () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
-        // headers: {
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        // }
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+        // credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch ride details');
       const data = await response.json();
@@ -161,8 +161,10 @@ const TrackingComponent = () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-location/${rideDetails._id}`, {
-        credentials: 'include'
-      });
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }      
+        });
   
       if (!response.ok) throw new Error('Failed to fetch driver location');
   

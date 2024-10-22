@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 exports.signup = async (req, res) => {
   try {
@@ -12,18 +13,23 @@ exports.signup = async (req, res) => {
 
     const user = new User({ username, email, password, role });
     await user.save();
-
-    // Set user ID in cookie
-    res.cookie('userId', user._id.toString(), { httpOnly: true });
     
-    res.status(201).json({ 
-      success: true, 
-      user: { 
-        id: user._id, 
-        username: user.username, 
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
         email: user.email,
         role: user.role
-      } 
+      }
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -38,16 +44,22 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    res.cookie('userId', user._id.toString(), { httpOnly: true });
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    res.status(200).json({ 
-      success: true, 
-      user: { 
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
         id: user._id,
         username: user.username,
         email: user.email,
         role: user.role
-      } 
+      }
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -55,18 +67,12 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  res.clearCookie('userId');
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
 exports.getMe = async (req, res) => {
   try {
-    const userId = req.cookies.userId;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Not authenticated' });
-    }
-
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }

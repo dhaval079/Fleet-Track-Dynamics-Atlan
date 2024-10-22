@@ -1,47 +1,50 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
-
-  const login = async (email, password) => {
+  const [user, setUser] = useState(() => {
+    const userData = localStorage.getItem('user');
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v2/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password })
-      });
+      return userData ? JSON.parse(userData) : null;
+    } catch {
+      localStorage.removeItem('user');
+      return null;
+    }
+  });
 
-      const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
-        return true;
-      }
-      return false;
+  const login = useCallback(async (userData) => {
+    try {
+      // Store full user data
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
+      const token = localStorage.getItem('token');
       await fetch(`${BACKEND_URL}/api/v2/auth/logout`, {
         method: 'GET',
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
-      localStorage.removeItem('user');
-      setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      // Clear all stored data
+      
+      localStorage.clear();
+      
+      setUser(null);
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
@@ -50,4 +53,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

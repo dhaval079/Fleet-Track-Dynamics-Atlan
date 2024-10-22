@@ -7,7 +7,7 @@ export const apiCall = async (endpoint, method = 'GET', body = null) => {
   try {
     const response = await apiCall(`${API_BASE_URL}${endpoint}`, {
       method,
-      credentials: 'include',
+      
       headers: {
         'Content-Type': 'application/json',
       },

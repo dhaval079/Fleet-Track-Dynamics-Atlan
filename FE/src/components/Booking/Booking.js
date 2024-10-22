@@ -109,8 +109,8 @@ const BookingComponent = () => {
 
   const initializeSocket = () => {
     const newSocket = io('https://fleet-track-dynamics-atlan.onrender.com', {
-      // query: { token: localStorage.getItem('token') }
-      withCredentials: true
+      query: { token: localStorage.getItem('token') }
+      // withCredentials: true
     });
     
     setSocket(newSocket);
@@ -129,9 +129,8 @@ const BookingComponent = () => {
   const fetchVehicles = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/vehicles`, {
-        // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        credentials: 'include',
-        headers: {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        // 
           'Content-Type': 'application/json'
         }
       });
@@ -152,8 +151,8 @@ const BookingComponent = () => {
     try {
       setIsLoading(true);
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers`, {
-        // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        credentials: 'include'
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`}
+        // credentials: 'include'
       });
 
       if (!response.ok) {
@@ -235,11 +234,12 @@ const BookingComponent = () => {
       const response = await fetch(`${BACKEND_URL}/api/v2/bookings/match`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
+        
         body: JSON.stringify({
-          userId: user.id, // Use the id from the authenticated user object
+          userId: localStorage.getItem('userId'), // Use the id from the authenticated user object
           pickup: {
             address: originInputRef.current.value,
             coordinates: originInputRef.current.coordinates
@@ -324,9 +324,9 @@ const BookingComponent = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        credentials: 'include',
+        // 
         body: JSON.stringify(bookingData),
       });
 

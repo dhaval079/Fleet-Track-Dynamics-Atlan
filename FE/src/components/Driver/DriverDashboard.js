@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bar, Pie } from 'react-chartjs-2';
@@ -8,9 +8,6 @@ import { useAuth } from '../context/AuthContext';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
-const driverId = localStorage.getItem('userId');
-console.log("Driver id is : ", driverId)
-
 
 const DriverDashboard = () => {
   const { user } = useAuth();
@@ -26,40 +23,56 @@ const DriverDashboard = () => {
     jobStatusDistribution: {}
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchDriverInfo();
-      fetchJobs();
-      const interval = setInterval(fetchJobs, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+  const fetchDriverInfo = useCallback(async () => {
+    const driverId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
 
-  const fetchDriverInfo = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${driverId}`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      if (!response.ok) throw new Error('Failed to fetch driver info');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch driver info');
+      }
+
       const data = await response.json();
       setIsAvailable(data.driver.isAvailable);
+      return true;
     } catch (error) {
       console.error('Error fetching driver info:', error);
-      setError('Failed to load driver information');
+      throw new Error('Failed to load driver information');
     }
-  };
+  }, []);
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    const email = user?.email;
+
+    if (!email || !token) {
+      throw new Error('Authentication required');
+    }
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-jobs`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
-        body: JSON.stringify({ email: user.email })
+        body: JSON.stringify({ email })
       });
-      if (!response.ok) throw new Error('Failed to fetch jobs');
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Session expired');
+        }
+        throw new Error('Failed to fetch jobs');
+      }
+
       const data = await response.json();
       
       const active = data.bookings.filter(job => ['en_route', 'goods_collected'].includes(job.status));
@@ -68,143 +81,254 @@ const DriverDashboard = () => {
       
       setJobs({ active, pending, incoming });
       calculateAnalytics(data.bookings);
+      return true;
     } catch (error) {
       console.error('Error fetching jobs:', error);
-      setError('Failed to load jobs');
-    } finally {
-      setLoading(false);
+      throw error;
     }
-  };
+  }, [user?.email]);
 
-
-
-  const calculateAnalytics = (bookings) => {
+  const calculateAnalytics = useCallback((bookings) => {
     const completedJobs = bookings.filter(job => job.status === 'completed');
     const totalEarnings = completedJobs.reduce((sum, job) => sum + job.price, 0);
     
     const jobStatusDistribution = bookings.reduce((acc, job) => {
-        acc[job.status] = (acc[job.status] || 0) + 1;
-        return acc;
+      acc[job.status] = (acc[job.status] || 0) + 1;
+      return acc;
     }, {});
 
     setAnalytics({
-        totalEarnings,
-        completedJobs: completedJobs.length,
-        averageRating: 4.5, // Placeholder, as we don't have this data
-        jobStatusDistribution
+      totalEarnings,
+      completedJobs: completedJobs.length,
+      averageRating: 4.5,
+      jobStatusDistribution
     });
-};
+  }, []);
 
-const barChartData = {
-  labels: ['Total Earnings', 'Completed Jobs'],
-  datasets: [
-      {
-          label: 'Total Earnings',
-          data: [analytics.totalEarnings, 0], // 0 for completed jobs on this dataset
-          backgroundColor: '#007A5E', // Emerald Green
-          yAxisID: 'earnings', // Use the earnings y-axis
-      },
-      {
-          label: 'Completed Jobs',
-          data: [0, analytics.completedJobs], // 0 for earnings on this dataset
-          backgroundColor: '#D4AF37', // Royal Gold
-          yAxisID: 'jobs', // Use the jobs y-axis
-      },
-  ],
-};
+  const initializeDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-// Bar Chart Options with Dual Axes
-const barChartOptions = {
-  scales: {
-      earnings: {
-          type: 'linear',
-          position: 'left',
-          ticks: {
-              callback: (value) => `$${value}`, // Format for earnings
-          },
-          title: {
-              display: true,
-              text: 'Total Earnings ($)',
-          },
-      },
-      jobs: {
-          type: 'linear',
-          position: 'right',
-          ticks: {
-              beginAtZero: true,
-          },
-          title: {
-              display: true,
-              text: 'Completed Jobs',
-          },
-          grid: {
-              drawOnChartArea: false, // Don't draw grid lines for the right axis
-          },
-      },
-  },
-};
+    try {
+      await fetchDriverInfo();
+      await fetchJobs();
+    } catch (error) {
+      console.error('Dashboard initialization error:', error);
+      setError(error.message || 'Failed to initialize dashboard');
+      return false;
+    } finally {
+      setLoading(false);
+    }
 
- 
-const toggleAvailability = async () => {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${driverId}/availability`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ isAvailable: !isAvailable })
-    });
-    if (!response.ok) throw new Error('Failed to update availability');
-    const data = await response.json();
-    setIsAvailable(data.driver.isAvailable);
-  } catch (error) {
-    console.error('Error updating availability:', error);
-    alert('Failed to update availability');
-  }
-};
+    return true;
+  }, [fetchDriverInfo, fetchJobs]);
+
+  useEffect(() => {
+    let intervalId;
+
+    const setupDashboard = async () => {
+      if (user?.email && localStorage.getItem('token')) {
+        const success = await initializeDashboard();
+        
+        if (success) {
+          // Set up polling only if initialization was successful
+          intervalId = setInterval(async () => {
+            try {
+              await fetchJobs();
+            } catch (error) {
+              console.error('Polling error:', error);
+              // Optionally handle polling errors
+            }
+          }, 30000);
+        }
+      }
+    };
+
+    setupDashboard();
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [user?.email, initializeDashboard, fetchJobs]);
+
+  const toggleAvailability = async () => {
+    const driverId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${driverId}/availability`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isAvailable: !isAvailable })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update availability');
+      }
+
+      const data = await response.json();
+      setIsAvailable(data.driver.isAvailable);
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      alert('Failed to update availability. Please try again.');
+    }
+  };
 
   const updateJobStatus = async (jobId, newStatus) => {
+    const token = localStorage.getItem('token');
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
         body: JSON.stringify({ status: newStatus })
       });
-      if (!response.ok) throw new Error('Failed to update job status');
-      fetchJobs(); // Refresh the jobs list
+
+      if (!response.ok) {
+        throw new Error('Failed to update job status');
+      }
+
+      await fetchJobs();
     } catch (error) {
       console.error('Error updating job status:', error);
-      alert('Failed to update job status');
+      alert('Failed to update job status. Please try again.');
     }
   };
 
   const acceptJob = async (jobId) => {
+    const token = localStorage.getItem('token');
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
         body: JSON.stringify({ status: 'assigned' })
       });
-      if (!response.ok) throw new Error('Failed to accept job');
-      fetchJobs(); // Refresh the jobs list
+
+      if (!response.ok) {
+        throw new Error('Failed to accept job');
+      }
+
+      await fetchJobs();
     } catch (error) {
       console.error('Error accepting job:', error);
-      alert('Failed to accept job');
+      alert('Failed to accept job. Please try again.');
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  if (error) return <div className="flex justify-center items-center h-screen text-red-500">Error: {error}</div>;
+  // Early return for authentication check
+  if (!user?.email || !localStorage.getItem('token')) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-red-500 text-xl">Please log in to access the dashboard</div>
+      </div>
+    );
+  }
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Error state with retry button
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <div className="text-red-500 text-xl mb-4">{error}</div>
+        <button 
+          onClick={initializeDashboard}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Chart data and options
+  const barChartData = {
+    labels: ['Total Earnings', 'Completed Jobs'],
+    datasets: [
+      {
+        label: 'Total Earnings',
+        data: [analytics.totalEarnings, 0],
+        backgroundColor: '#007A5E',
+        yAxisID: 'earnings',
+      },
+      {
+        label: 'Completed Jobs',
+        data: [0, analytics.completedJobs],
+        backgroundColor: '#D4AF37',
+        yAxisID: 'jobs',
+      },
+    ],
+  };
+
+  const barChartOptions = {
+    scales: {
+      earnings: {
+        type: 'linear',
+        position: 'left',
+        ticks: {
+          callback: (value) => `$${value}`,
+        },
+        title: {
+          display: true,
+          text: 'Total Earnings ($)',
+        },
+      },
+      jobs: {
+        type: 'linear',
+        position: 'right',
+        ticks: {
+          beginAtZero: true,
+        },
+        title: {
+          display: true,
+          text: 'Completed Jobs',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
+    },
+  };
+
+  const statusColors = {
+    pending: '#FFA500',
+    assigned: '#4169E1',
+    en_route: '#32CD32',
+    goods_collected: '#9370DB',
+    completed: '#228B22'
+  };
+
+  const pieChartData = {
+    labels: Object.keys(analytics.jobStatusDistribution),
+    datasets: [
+      {
+        data: Object.values(analytics.jobStatusDistribution),
+        backgroundColor: Object.keys(analytics.jobStatusDistribution)
+          .map(status => statusColors[status] || '#000000'),
+      },
+    ],
+  };
+
+  // Job card component
   const JobCard = ({ job, isActive, isPending }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -252,24 +376,7 @@ const toggleAvailability = async () => {
     </motion.div>
   );
 
-  const statusColors = {
-    pending: '#FFA500',
-    assigned: '#4169E1',
-    en_route: '#32CD32',
-    goods_collected: '#9370DB',
-    completed: '#228B22'
-  };
-
-  const pieChartData = {
-    labels: Object.keys(analytics.jobStatusDistribution),
-    datasets: [
-      {
-        data: Object.values(analytics.jobStatusDistribution),
-        backgroundColor: Object.keys(analytics.jobStatusDistribution).map(status => statusColors[status] || '#000000'),
-      },
-    ],
-  };
-
+  // Main dashboard render
   return (
     <div className="container mx-auto p-8 bg-gray-100 min-h-screen">
       <motion.h1 
@@ -305,7 +412,7 @@ const toggleAvailability = async () => {
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Performance Metrics</h2>
           <Bar data={barChartData} options={barChartOptions} />
-          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -317,6 +424,7 @@ const toggleAvailability = async () => {
           <h3 className="text-xl font-semibold mb-2">Completed Jobs</h3>
           <p className="text-3xl font-bold text-blue-600">{analytics.completedJobs}</p>
         </div>
+
         <div className="bg-white p-6 rounded-lg shadow-lg text-center">
           <h3 className="text-xl font-semibold mb-2">Average Rating</h3>
           <p className="text-3xl font-bold text-yellow-600">{analytics.averageRating.toFixed(1)}</p>

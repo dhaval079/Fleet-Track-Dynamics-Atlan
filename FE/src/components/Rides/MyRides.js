@@ -3,10 +3,13 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 const UserBookings = () => {
+  const navigate = useNavigate();
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,18 +17,24 @@ const UserBookings = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      fetchUserBookings();
-    }
-  }, [user]);
+    const userEmail = localStorage.getItem('email');
+    const token = localStorage.getItem('token');
 
-  const fetchUserBookings = async () => {
+    if (!userEmail || !token) {
+      navigate('/login');
+      return;
+    }
+
+    fetchUserBookings(userEmail, token);
+  }, [navigate]);
+
+  const fetchUserBookings = async (userEmail, token) => {
     try {
       setLoading(true);
       setError(null);
 
-      if (!user || !user.email) {
-        setError('User information not found. Please log in again.');
+      if (!userEmail || !token) {
+        setError('Authentication information missing. Please log in again.');
         setLoading(false);
         return;
       }
@@ -33,20 +42,27 @@ const UserBookings = () => {
       const response = await fetch(`${BACKEND_URL}/api/v2/bookings/userbookings`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
-        body: JSON.stringify({ email: user.email })
+        body: JSON.stringify({ email: userEmail })
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem('token');
+          localStorage.removeItem('email');
+          navigate('/login');
+          return;
+        }
         throw new Error('Failed to fetch bookings');
       }
 
       const data = await response.json();
       
       if (data.success) {
-        console.log('Fetched bookings:', data.bookings); // Debug log
+        console.log('Fetched bookings:', data.bookings);
         setBookings(data.bookings);
       } else {
         throw new Error(data.message || 'Failed to fetch bookings');
@@ -58,6 +74,13 @@ const UserBookings = () => {
       setLoading(false);
     }
   };
+
+  const handleRetry = () => {
+    const userEmail = localStorage.getItem('email');
+    const token = localStorage.getItem('token');
+    fetchUserBookings(userEmail, token);
+  };
+
 
   const getStatusColor = (status) => {
     switch (status) {
