@@ -34,14 +34,14 @@ schedulerService.init();
 
 app.use(express.json());
 app.use(cookieParser());
-// app.use(cors({
-//   origin: 'https://fleet-track-dynamics-atlan.vercel.app', // Replace with your actual frontend URL
-//   credentials: true,
-// }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://fleet-track-dynamics-atlan.vercel.app'],
-  credentials: true
+  origin: 'https://fleet-track-dynamics-atlan.vercel.app', // Replace with your actual frontend URL
+  credentials: true,
 }));
+// app.use(cors({
+//   origin: ['http://localhost:3000', 'https://fleet-track-dynamics-atlan.vercel.app'],
+//   credentials: true
+// }));
 app.use(cookieParser());
 app.use(loggingMiddleware);
 // app.get('/api/v2/logs', authentication, (req, res) => {
