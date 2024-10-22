@@ -1,35 +1,10 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 const AuthContext = createContext(null);
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/v2/auth/me`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-      setUser(null);
-    }
-  };
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
   const login = async (email, password) => {
     try {
@@ -44,6 +19,7 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       if (data.success) {
+        localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
         return true;
       }
@@ -60,6 +36,7 @@ export const AuthProvider = ({ children }) => {
         method: 'GET',
         credentials: 'include',
       });
+      localStorage.removeItem('user');
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
@@ -67,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, checkAuthStatus }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,12 +2,10 @@ import React from 'react';
 import { UserCircle, Truck, MapPin, Mail, Star } from 'lucide-react';
 import Card from '../card';
 import { CardContent, CardHeader, CardTitle } from '../cardContent';
-import { useAuth } from '../context/AuthContext';
 
 const UserProfile = () => {
-  const { user, loading } = useAuth();
+  const user = JSON.parse(localStorage.getItem('user'));
 
-  if (loading) return <div>Loading...</div>;
   if (!user) return <div>User not found. Please log in.</div>;
 
   return (
