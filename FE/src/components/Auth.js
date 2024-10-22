@@ -33,6 +33,17 @@ const Auth = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const storeUserData = (userData) => {
+    // Clear any existing data
+    localStorage.clear();
+
+    // Store user data
+    localStorage.setItem('userId', userData.user.id);
+    localStorage.setItem('email', userData.user.email);
+    localStorage.setItem('role', userData.user.role);
+    localStorage.setItem('username', userData.user.username);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -43,15 +54,27 @@ const Auth = () => {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isLogin ? { email: formData.email, password: formData.password } : formData),
+        body: JSON.stringify(isLogin ? { 
+          email: formData.email, 
+          password: formData.password 
+        } : formData),
         credentials: 'include'
       });
 
       const data = await response.json();
 
       if (data.success) {
+        storeUserData(data);
         await login(formData.email, formData.password);
-        navigate('/');
+        
+        // Navigate based on role
+        if (data.user.role === 'driver') {
+          navigate('/driver/dashboard');
+        } else if (data.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         setError(data.message || 'Authentication failed');
       }
@@ -68,9 +91,27 @@ const Auth = () => {
     setError(null);
   
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate('/', { replace: true });
+      const response = await fetch(`${BACKEND_URL}/api/v2/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        storeUserData(data);
+        await login(email, password);
+        
+        // Navigate based on role
+        if (data.user.role === 'driver') {
+          navigate('/driver/dashboard', { replace: true });
+        } else if (data.user.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
         setError('Login failed. Please check your credentials.');
       }

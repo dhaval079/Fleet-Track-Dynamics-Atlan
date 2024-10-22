@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const driverId = localStorage.getItem('userId');
 
 const DriverLocationUpdate = () => {
   const [address, setAddress] = useState('');
@@ -88,7 +89,7 @@ const handleSubmit = async (e) => {
   if (!location || !user) return;
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/update-location/${user.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/update-location/${driverId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

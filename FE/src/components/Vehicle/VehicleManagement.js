@@ -4,6 +4,7 @@ import { Car, Truck, Calendar, Hexagon, Cpu, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const driverId = localStorage.getItem('userId');
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -19,7 +20,7 @@ const VehicleManagement = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v2/vehicles/driver/${user.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/v2/vehicles/driver/${driverId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch vehicles');

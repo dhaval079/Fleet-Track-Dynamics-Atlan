@@ -38,14 +38,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Set user ID in cookie
     res.cookie('userId', user._id.toString(), { httpOnly: true });
 
     res.status(200).json({ 
       success: true, 
       user: { 
-        id: user._id, 
-        username: user.username, 
+        id: user._id,
+        username: user.username,
         email: user.email,
         role: user.role
       } 

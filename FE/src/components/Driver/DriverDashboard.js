@@ -8,6 +8,9 @@ import { useAuth } from '../context/AuthContext';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const driverId = localStorage.getItem('userId');
+console.log("Driver id is : ", driverId)
+
 
 const DriverDashboard = () => {
   const { user } = useAuth();
@@ -34,7 +37,7 @@ const DriverDashboard = () => {
 
   const fetchDriverInfo = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${user.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${driverId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch driver info');
@@ -144,7 +147,7 @@ const barChartOptions = {
  
 const toggleAvailability = async () => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${user.id}/availability`, {
+    const response = await fetch(`${BACKEND_URL}/api/v2/drivers/${driverId}/availability`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
