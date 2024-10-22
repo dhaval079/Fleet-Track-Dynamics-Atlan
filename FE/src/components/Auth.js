@@ -62,15 +62,15 @@ const Auth = () => {
       setLoading(false);
     }
   };
-
+  
   const handleTestLogin = async (email, password) => {
     setLoading(true);
     setError(null);
-
+  
     try {
       const success = await login(email, password);
       if (success) {
-        navigate('/');
+        navigate('/', { replace: true });
       } else {
         setError('Login failed. Please check your credentials.');
       }

@@ -1,18 +1,24 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
-const AuthContext = createContext();
-
+const AuthContext = createContext(null);
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   const checkAuthStatus = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/auth/me`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
@@ -20,28 +26,25 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error checking auth status:', error);
+      console.error('Auth check error:', error);
       setUser(null);
-    } finally {
-      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
 
   const login = async (email, password) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
       });
+
       const data = await response.json();
       if (data.success) {
-        await checkAuthStatus();
+        setUser(data.user);
         return true;
       }
       return false;
@@ -54,8 +57,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await fetch(`${BACKEND_URL}/api/v2/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
+        method: 'GET',
+        credentials: 'include',
       });
       setUser(null);
     } catch (error) {
@@ -63,15 +66,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    logout,
-    checkAuthStatus
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, login, logout, checkAuthStatus }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

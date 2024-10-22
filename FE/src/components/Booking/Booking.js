@@ -130,8 +130,10 @@ const BookingComponent = () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/vehicles`, {
         // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        credentials: 'include'
-
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) {
