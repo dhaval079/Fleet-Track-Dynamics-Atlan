@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = 'http://localhost:3001';
 const driverId = localStorage.getItem('userId');
 console.log("Driver id is : ", driverId)
 

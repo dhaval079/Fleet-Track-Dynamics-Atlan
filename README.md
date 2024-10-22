@@ -131,7 +131,7 @@ npm install
 Create a `.env` file in the frontend directory and add the following:
 ```
 REACT_APP_API_URL=api
-REACT_APP_SOCKET_URL=https://fleet-track-dynamics-atlan.onrender.com
+REACT_APP_SOCKET_URL=http://localhost:3001
 REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 

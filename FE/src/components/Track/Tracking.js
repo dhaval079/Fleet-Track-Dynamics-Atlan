@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { apiCall } from '../../utils/api';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = 'http://localhost:3001';
 
 const TrackingComponent = () => {
   const [bookingId, setBookingId] = useState('');
