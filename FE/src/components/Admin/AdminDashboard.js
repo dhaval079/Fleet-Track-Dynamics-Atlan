@@ -10,7 +10,7 @@ import { apiCall } from '../../utils/api';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
-  const BACKEND_URL = 'http://localhost:3001';
+  const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardData, setDashboardData] = useState(null);

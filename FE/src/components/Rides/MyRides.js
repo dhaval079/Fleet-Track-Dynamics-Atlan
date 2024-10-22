@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 
 const UserBookings = () => {
   const [bookings, setBookings] = useState([]);
