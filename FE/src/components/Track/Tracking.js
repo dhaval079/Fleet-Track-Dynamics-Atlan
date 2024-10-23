@@ -95,87 +95,118 @@ const TrackingComponent = () => {
     setMap(mapInstance);
   };
 
-  const updateMap = (booking) => {
-    if (!map) return;
+ const updateMap = (booking) => {
+  if (!map) return;
 
-    const bounds = new window.google.maps.LatLngBounds();
-    
-    // Clear existing markers
-    Object.values(markers).forEach(marker => marker.setMap(null));
-    setMarkers({});
+  const bounds = new window.google.maps.LatLngBounds();
+  
+  // Clear existing markers
+  Object.values(markers).forEach(marker => marker.setMap(null));
+  setMarkers({});
 
-    // Add pickup marker
-    const pickupMarker = new window.google.maps.Marker({
-      position: booking.pickup.coordinates,
-      map: map,
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: '#4F46E5',
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 3,
-      },
-      title: 'Pickup Location'
-    });
-    bounds.extend(booking.pickup.coordinates);
-
-    // Add dropoff marker
-    const dropoffMarker = new window.google.maps.Marker({
-      position: booking.dropoff.coordinates,
-      map: map,
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: '#7C3AED',
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 3,
-      },
-      title: 'Dropoff Location'
-    });
-    bounds.extend(booking.dropoff.coordinates);
-
-    const routePath = new window.google.maps.Polyline({
-      path: [booking.pickup.coordinates, booking.dropoff.coordinates],
-      geodesic: true,
-      strokeColor: '#4F46E5',
-      strokeOpacity: 0.8,
-      strokeWeight: 3
-    });
-    routePath.setMap(map);
-
-    map.fitBounds(bounds, { padding: 60 });
-
-    setMarkers({
-      pickup: pickupMarker,
-      dropoff: dropoffMarker,
-      route: routePath
-    });
-  };
-
-  const updateMarkerPosition = (markerType, position) => {
-    if (!map) return;
-
-    if (markers[markerType]) {
-      markers[markerType].setPosition(position);
-    } else {
-      const newMarker = new window.google.maps.Marker({
-        position: position,
-        map: map,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: '#10B981',
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 3,
-        },
-        title: 'Current Location'
-      });
-      setMarkers(prev => ({ ...prev, [markerType]: newMarker }));
+  // Add pickup marker (Origin - A marker)
+  const pickupMarker = new window.google.maps.Marker({
+    position: booking.pickup.coordinates,
+    map: map,
+    label: {
+      text: 'A',
+      color: 'white',
+      fontSize: '14px',
+      fontWeight: 'bold'
+    },
+    icon: {
+      path: window.google.maps.SymbolPath.CIRCLE,
+      fillColor: '#EA4335', // Google Maps red
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 2,
+      scale: 8
     }
-  };
+  });
+  bounds.extend(booking.pickup.coordinates);
+
+  // Add dropoff marker (Destination - B marker)
+  const dropoffMarker = new window.google.maps.Marker({
+    position: booking.dropoff.coordinates,
+    map: map,
+    label: {
+      text: 'B',
+      color: 'white',
+      fontSize: '14px',
+      fontWeight: 'bold'
+    },
+    icon: {
+      path: window.google.maps.SymbolPath.CIRCLE,
+      fillColor: '#EA4335', // Google Maps red
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 2,
+      scale: 8
+    }
+  });
+  bounds.extend(booking.dropoff.coordinates);
+
+  // Create route path with better styling
+  const routePath = new window.google.maps.Polyline({
+    path: [booking.pickup.coordinates, booking.dropoff.coordinates],
+    geodesic: true,
+    strokeColor: '#4285F4', // Google Maps blue
+    strokeOpacity: 1,
+    strokeWeight: 3,
+    icons: [{
+      icon: {
+        path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 3,
+        strokeColor: '#4285F4',
+        strokeOpacity: 1,
+      },
+      repeat: '100px'
+    }]
+  });
+  routePath.setMap(map);
+
+  map.fitBounds(bounds, { padding: 60 });
+
+  setMarkers({
+    pickup: pickupMarker,
+    dropoff: dropoffMarker,
+    route: routePath
+  });
+};
+
+const updateMarkerPosition = (markerType, position) => {
+  if (!map) return;
+
+  if (markers[markerType]) {
+    markers[markerType].setPosition(position);
+  } else {
+    // Custom SVG marker for driver
+    const driverIcon = {
+      url: `data:image/svg+xml;utf-8,${encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#FBBC04">
+          <path d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+        </svg>
+      `)}`,
+      scaledSize: new window.google.maps.Size(32, 32),
+      anchor: new window.google.maps.Point(16, 32),
+      labelOrigin: new window.google.maps.Point(16, 10)
+    };
+
+    const newMarker = new window.google.maps.Marker({
+      position: position,
+      map: map,
+      icon: driverIcon,
+      label: {
+        text: '🚗',
+        fontSize: '20px'
+      },
+      animation: window.google.maps.Animation.DROP,
+      title: 'Driver Location'
+    });
+
+    setMarkers(prev => ({ ...prev, [markerType]: newMarker }));
+  }
+};
 
   const fetchRideDetails = async () => {
     if (!bookingId.trim()) {
