@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV';
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
@@ -10,40 +10,55 @@ const TrackingComponent = () => {
   const [rideDetails, setRideDetails] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
-  const [socket, setSocket] = useState(null);
   const [markers, setMarkers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [socketInstance, setSocketInstance] = useState(null);
   const mapRef = useRef(null);
-  const inputRef = useRef(null);
 
-  // Initialize socket connection
   useEffect(() => {
-    const newSocket = io(BACKEND_URL, {
-      query: { token: localStorage.getItem('token') }
-    });
+    // Initialize socket connection
+    try {
+      const socket = io(BACKEND_URL, {
+        query: { token: localStorage.getItem('token') },
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
 
-    setSocket(newSocket);
+      socket.on('connect', () => {
+        console.log('Socket connected');
+        setError(null);
+      });
 
-    return () => newSocket.close();
-  }, []);
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        setError('Connection error. Retrying...');
+      });
 
-  // Handle socket location updates
-  useEffect(() => {
-    if (socket) {
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+      });
+
       socket.on('locationUpdate', (location) => {
         setCurrentLocation(location);
         updateMarkerPosition('current', location);
       });
 
-      socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        setError('Lost connection to tracking server');
-      });
-    }
-  }, [socket]);
+      setSocketInstance(socket);
 
-  // Initialize Google Maps
+      return () => {
+        if (socket) {
+          socket.disconnect();
+        }
+      };
+    } catch (err) {
+      console.error('Socket initialization error:', err);
+      setError('Failed to establish connection');
+    }
+  }, []);
+
   useEffect(() => {
     loadGoogleMapsScript();
   }, []);
@@ -55,11 +70,11 @@ const TrackingComponent = () => {
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.gomaps.pro/maps/api/js?key=${API_KEY}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}`;
     script.async = true;
     script.defer = true;
     script.onload = initMap;
-    script.onerror = () => setError('Failed to load map. Please refresh the page.');
+    script.onerror = () => setError('Failed to load map');
     document.head.appendChild(script);
   };
 
@@ -69,61 +84,6 @@ const TrackingComponent = () => {
     const mapInstance = new window.google.maps.Map(mapRef.current, {
       center: NEW_YORK_COORDINATES,
       zoom: 12,
-      styles: [
-        {
-          "featureType": "water",
-          "elementType": "geometry",
-          "stylers": [{"color": "#e9e9e9"},{"lightness": 17}]
-        },
-        {
-          "featureType": "landscape",
-          "elementType": "geometry",
-          "stylers": [{"color": "#f5f5f5"},{"lightness": 20}]
-        },
-        {
-          "featureType": "road.highway",
-          "elementType": "geometry.fill",
-          "stylers": [{"color": "#ffffff"},{"lightness": 17}]
-        },
-        {
-          "featureType": "road.highway",
-          "elementType": "geometry.stroke",
-          "stylers": [{"color": "#ffffff"},{"lightness": 29},{"weight": 0.2}]
-        },
-        {
-          "featureType": "road.arterial",
-          "elementType": "geometry",
-          "stylers": [{"color": "#ffffff"},{"lightness": 18}]
-        },
-        {
-          "featureType": "road.local",
-          "elementType": "geometry",
-          "stylers": [{"color": "#ffffff"},{"lightness": 16}]
-        },
-        {
-          "featureType": "poi",
-          "elementType": "geometry",
-          "stylers": [{"color": "#f5f5f5"},{"lightness": 21}]
-        },
-        {
-          "featureType": "poi.park",
-          "elementType": "geometry",
-          "stylers": [{"color": "#dedede"},{"lightness": 21}]
-        },
-        {
-          "elementType": "labels.text.stroke",
-          "stylers": [{"visibility": "on"},{"color": "#ffffff"},{"lightness": 16}]
-        },
-        {
-          "elementType": "labels.text.fill",
-          "stylers": [{"saturation": 36},{"color": "#333333"},{"lightness": 40}]
-        },
-        {
-          "elementType": "labels.icon",
-          "stylers": [{"visibility": "off"}]
-        }
-      ],
-      disableDefaultUI: true,
       zoomControl: true,
       mapTypeControl: false,
       scaleControl: true,
@@ -176,7 +136,6 @@ const TrackingComponent = () => {
     });
     bounds.extend(booking.dropoff.coordinates);
 
-    // Draw route line
     const routePath = new window.google.maps.Polyline({
       path: [booking.pickup.coordinates, booking.dropoff.coordinates],
       geodesic: true,
@@ -186,7 +145,6 @@ const TrackingComponent = () => {
     });
     routePath.setMap(map);
 
-    // Fit map to show all markers with padding
     map.fitBounds(bounds, { padding: 60 });
 
     setMarkers({
@@ -242,8 +200,8 @@ const TrackingComponent = () => {
       const data = await response.json();
       setRideDetails(data.booking);
       
-      if (socket) {
-        socket.emit('subscribe', bookingId);
+      if (socketInstance) {
+        socketInstance.emit('subscribe', bookingId);
       }
 
       updateMap(data.booking);
@@ -288,34 +246,32 @@ const TrackingComponent = () => {
     }
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Panel */}
-      <div className="w-[480px] h-full bg-white shadow-xl z-10 overflow-y-auto">
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Track My Ride</h1>
+ return (
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Left Panel - Made scrollable independently on mobile */}
+      <div className="w-full md:w-[480px] h-[45vh] md:h-full bg-white shadow-xl z-10 overflow-y-auto order-2 md:order-1">
+        <div className="p-4 md:p-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">Track My Ride</h1>
           
           {/* Search Section */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <div className="relative group">
               <input
-                ref={inputRef}
                 type="text"
                 value={bookingId}
                 onChange={(e) => setBookingId(e.target.value)}
                 placeholder="Enter Booking ID"
-                className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-indigo-500 transition-all duration-300 text-gray-900 placeholder-gray-400"
+                className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-indigo-500 transition-all duration-300 text-gray-900 placeholder-gray-400"
               />
-              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
             </div>
             <button
               onClick={fetchRideDetails}
               disabled={isLoading}
-              className="mt-4 w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+              className="mt-3 md:mt-4 w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                  <span className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
                   Searching...
                 </span>
               ) : (
@@ -324,7 +280,7 @@ const TrackingComponent = () => {
             </button>
             
             {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+              <div className="mt-3 md:mt-4 p-3 md:p-4 bg-red-50 border border-red-100 rounded-xl">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
@@ -332,35 +288,35 @@ const TrackingComponent = () => {
 
           {/* Ride Details */}
           {rideDetails && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="p-4 bg-gray-50 rounded-xl">
+            <div className="space-y-4 md:space-y-6 animate-fadeIn">
+              <div className="p-3 md:p-4 bg-gray-50 rounded-xl">
                 <div className="text-sm text-gray-500">Tracking ID</div>
-                <div className="font-mono text-gray-900">{bookingId}</div>
+                <div className="font-mono text-gray-900 text-sm md:text-base">{bookingId}</div>
               </div>
 
               <div className="relative pl-8 py-4">
                 <div className="absolute left-0 top-6 w-[2px] h-[calc(100%-48px)] bg-gradient-to-b from-indigo-500 to-purple-500 rounded"></div>
                 
-                <div className="relative mb-8">
-                  <div className="absolute left-[-15px] w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="relative mb-6 md:mb-8">
+                  <div className="absolute left-[-15px] w-6 h-6 md:w-8 md:h-8 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg">
                     <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                   </div>
                   <div className="text-sm text-gray-500 mb-1">From</div>
-                  <div className="text-gray-900 font-medium">{rideDetails.pickup.address}</div>
+                  <div className="text-gray-900 font-medium text-sm md:text-base">{rideDetails.pickup.address}</div>
                 </div>
 
                 <div className="relative">
-                  <div className="absolute left-[-15px] w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="absolute left-[-15px] w-6 h-6 md:w-8 md:h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
                     <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                   </div>
                   <div className="text-sm text-gray-500 mb-1">To</div>
-                  <div className="text-gray-900 font-medium">{rideDetails.dropoff.address}</div>
+                  <div className="text-gray-900 font-medium text-sm md:text-base">{rideDetails.dropoff.address}</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+              <div className="flex items-center justify-between p-3 md:p-4 bg-gray-50 rounded-xl">
                 <span className="text-sm text-gray-500">Status</span>
-                <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium capitalize">
+                <span className="px-3 md:px-4 py-1.5 md:py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium capitalize">
                   {rideDetails.status}
                 </span>
               </div>
@@ -369,11 +325,11 @@ const TrackingComponent = () => {
                 <button
                   onClick={getDriverLocation}
                   disabled={isLoading}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                  className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
-                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                      <span className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
                       Locating Driver...
                     </span>
                   ) : (
@@ -386,9 +342,9 @@ const TrackingComponent = () => {
         </div>
       </div>
 
-      {/* Map Panel */}
-      <div className="flex-1 relative">
-        <div ref={mapRef} className="absolute inset-0 z-0"></div>
+      {/* Map Panel - Moved to top on mobile */}
+      <div className="flex-1 h-[55vh] md:h-full relative order-1 md:order-2">
+        <div ref={mapRef} className="absolute inset-0 z-0 w-full h-full"></div>
       </div>
     </div>
   );
