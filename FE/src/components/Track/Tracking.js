@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV';
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const NEW_YORK_COORDINATES = { lat: 40.7128, lng: -74.0060 };
 
 const TrackingComponent = () => {
   const [bookingId, setBookingId] = useState('');
@@ -11,139 +12,290 @@ const TrackingComponent = () => {
   const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [socket, setSocket] = useState(null);
+  const [error, setError] = useState(null);
   const mapRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Socket setup and Google Maps initialization remains the same...
+  // Initialize socket connection
   useEffect(() => {
     const newSocket = io(BACKEND_URL, {
       query: { token: localStorage.getItem('token') }
     });
+
     setSocket(newSocket);
+
     return () => newSocket.close();
   }, []);
 
+  // Handle socket location updates
   useEffect(() => {
     if (socket) {
       socket.on('locationUpdate', (location) => {
         setCurrentLocation(location);
         updateMarkerPosition('current', location);
       });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        setError('Lost connection to tracking server');
+      });
     }
   }, [socket]);
 
-  // Map initialization code remains the same...
+  // Initialize Google Maps
   useEffect(() => {
     loadGoogleMapsScript();
   }, []);
 
   const loadGoogleMapsScript = () => {
+    if (window.google) {
+      initMap();
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = `https://maps.gomaps.pro/maps/api/js?key=${API_KEY}&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = initMap;
+    script.onerror = () => setError('Failed to load map. Please refresh the page.');
     document.head.appendChild(script);
   };
 
   const initMap = () => {
+    if (!mapRef.current) return;
+
     const mapInstance = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 0, lng: 0 },
-      zoom: 10,
+      center: NEW_YORK_COORDINATES,
+      zoom: 12,
       styles: [
         {
-          featureType: "poi",
-          elementType: "labels",
-          stylers: [{ visibility: "off" }]
+          "featureType": "water",
+          "elementType": "geometry",
+          "stylers": [{"color": "#e9e9e9"},{"lightness": 17}]
+        },
+        {
+          "featureType": "landscape",
+          "elementType": "geometry",
+          "stylers": [{"color": "#f5f5f5"},{"lightness": 20}]
+        },
+        {
+          "featureType": "road.highway",
+          "elementType": "geometry.fill",
+          "stylers": [{"color": "#ffffff"},{"lightness": 17}]
+        },
+        {
+          "featureType": "road.highway",
+          "elementType": "geometry.stroke",
+          "stylers": [{"color": "#ffffff"},{"lightness": 29},{"weight": 0.2}]
+        },
+        {
+          "featureType": "road.arterial",
+          "elementType": "geometry",
+          "stylers": [{"color": "#ffffff"},{"lightness": 18}]
+        },
+        {
+          "featureType": "road.local",
+          "elementType": "geometry",
+          "stylers": [{"color": "#ffffff"},{"lightness": 16}]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "geometry",
+          "stylers": [{"color": "#f5f5f5"},{"lightness": 21}]
+        },
+        {
+          "featureType": "poi.park",
+          "elementType": "geometry",
+          "stylers": [{"color": "#dedede"},{"lightness": 21}]
+        },
+        {
+          "elementType": "labels.text.stroke",
+          "stylers": [{"visibility": "on"},{"color": "#ffffff"},{"lightness": 16}]
+        },
+        {
+          "elementType": "labels.text.fill",
+          "stylers": [{"saturation": 36},{"color": "#333333"},{"lightness": 40}]
+        },
+        {
+          "elementType": "labels.icon",
+          "stylers": [{"visibility": "off"}]
         }
-      ]
+      ],
+      disableDefaultUI: true,
+      zoomControl: true,
+      mapTypeControl: false,
+      scaleControl: true,
+      streetViewControl: false,
+      rotateControl: false,
+      fullscreenControl: true
     });
+
     setMap(mapInstance);
   };
 
+  const updateMap = (booking) => {
+    if (!map) return;
+
+    const bounds = new window.google.maps.LatLngBounds();
+    
+    // Clear existing markers
+    Object.values(markers).forEach(marker => marker.setMap(null));
+    setMarkers({});
+
+    // Add pickup marker
+    const pickupMarker = new window.google.maps.Marker({
+      position: booking.pickup.coordinates,
+      map: map,
+      icon: {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        scale: 12,
+        fillColor: '#4F46E5',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+      },
+      title: 'Pickup Location'
+    });
+    bounds.extend(booking.pickup.coordinates);
+
+    // Add dropoff marker
+    const dropoffMarker = new window.google.maps.Marker({
+      position: booking.dropoff.coordinates,
+      map: map,
+      icon: {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        scale: 12,
+        fillColor: '#7C3AED',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+      },
+      title: 'Dropoff Location'
+    });
+    bounds.extend(booking.dropoff.coordinates);
+
+    // Draw route line
+    const routePath = new window.google.maps.Polyline({
+      path: [booking.pickup.coordinates, booking.dropoff.coordinates],
+      geodesic: true,
+      strokeColor: '#4F46E5',
+      strokeOpacity: 0.8,
+      strokeWeight: 3
+    });
+    routePath.setMap(map);
+
+    // Fit map to show all markers with padding
+    map.fitBounds(bounds, { padding: 60 });
+
+    setMarkers({
+      pickup: pickupMarker,
+      dropoff: dropoffMarker,
+      route: routePath
+    });
+  };
+
+  const updateMarkerPosition = (markerType, position) => {
+    if (!map) return;
+
+    if (markers[markerType]) {
+      markers[markerType].setPosition(position);
+    } else {
+      const newMarker = new window.google.maps.Marker({
+        position: position,
+        map: map,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: '#10B981',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3,
+        },
+        title: 'Current Location'
+      });
+      setMarkers(prev => ({ ...prev, [markerType]: newMarker }));
+    }
+  };
+
   const fetchRideDetails = async () => {
+    if (!bookingId.trim()) {
+      setError('Please enter a booking ID');
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch ride details');
+
+      if (!response.ok) {
+        throw new Error(response.status === 404 ? 'Booking not found' : 'Failed to fetch ride details');
+      }
+
       const data = await response.json();
       setRideDetails(data.booking);
+      
       if (socket) {
         socket.emit('subscribe', bookingId);
       }
-      setShowResults(true);
+
       updateMap(data.booking);
     } catch (error) {
       console.error('Error fetching ride details:', error);
-      alert('Failed to fetch ride details. Please try again.');
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Map update functions remain the same...
-  const updateMap = (booking) => {
-    if (!map) return;
-    // ... existing map update code ...
-  };
-
-  const updateMarkerPosition = (markerType, position) => {
-    if (!map) return;
-    // ... existing marker update code ...
-  };
-
   const getDriverLocation = async () => {
+    if (!rideDetails?._id) return;
+
     setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-location/${rideDetails._id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         }
       });
-      // ... rest of the driver location code ...
+
+      if (!response.ok) throw new Error('Failed to fetch driver location');
+
+      const data = await response.json();
+      if (data.success && data.driverLocation) {
+        const location = {
+          lat: data.driverLocation[1],
+          lng: data.driverLocation[0]
+        };
+        updateMarkerPosition('driver', location);
+      } else {
+        throw new Error(data.message || 'Driver location not available');
+      }
+    } catch (error) {
+      console.error('Error fetching driver location:', error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg animate-fadeIn">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-400 rounded-full animate-pulse"></div>
-              <h1 className="text-white text-xl font-bold">RideStream</h1>
-            </div>
-            <nav className="flex items-center space-x-6">
-              <a href="#" className="text-blue-100 hover:text-white transition-colors">Home</a>
-              <a href="#" className="text-blue-100 hover:text-white transition-colors">Driver</a>
-              <a href="#" className="text-blue-100 hover:text-white transition-colors">Profile</a>
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-400 transition-all transform hover:scale-105">
-                Track Ride
-              </button>
-            </nav>
-            <button className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-all transform hover:scale-105">
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8 animate-slideUp">
-        <div className={`bg-white rounded-2xl shadow-xl p-8 transition-all duration-500 transform ${showResults ? 'translate-y-0' : 'translate-y-4'}`}>
-          <h2 className="text-3xl font-bold text-blue-900 mb-6 animate-fadeIn">Track My Ride</h2>
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Panel */}
+      <div className="w-[480px] h-full bg-white shadow-xl z-10 overflow-y-auto">
+        <div className="p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Track My Ride</h1>
           
-          {/* Input Section */}
-          <div className={`transition-all duration-500 ${showResults ? 'mb-8' : 'mb-0'}`}>
+          {/* Search Section */}
+          <div className="mb-8">
             <div className="relative group">
               <input
                 ref={inputRef}
@@ -151,68 +303,77 @@ const TrackingComponent = () => {
                 value={bookingId}
                 onChange={(e) => setBookingId(e.target.value)}
                 placeholder="Enter Booking ID"
-                className="w-full px-6 py-4 bg-blue-50 border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-500 transition-all placeholder-blue-300 text-blue-900"
+                className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-indigo-500 transition-all duration-300 text-gray-900 placeholder-gray-400"
               />
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"></div>
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
             </div>
             <button
               onClick={fetchRideDetails}
               disabled={isLoading}
-              className="mt-4 w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+              className="mt-4 w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
                   <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                  Processing...
+                  Searching...
                 </span>
               ) : (
                 'Track Ride'
               )}
             </button>
+            
+            {error && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
           </div>
 
-          {/* Results Section */}
+          {/* Ride Details */}
           {rideDetails && (
-            <div className="animate-fadeIn">
-              <div className="bg-blue-50 rounded-xl p-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-blue-500 font-medium">Tracking ID:</span>
-                  <span className="text-blue-900 font-mono">{bookingId}</span>
-                </div>
+            <div className="space-y-6 animate-fadeIn">
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="text-sm text-gray-500">Tracking ID</div>
+                <div className="font-mono text-gray-900">{bookingId}</div>
+              </div>
+
+              <div className="relative pl-8 py-4">
+                <div className="absolute left-0 top-6 w-[2px] h-[calc(100%-48px)] bg-gradient-to-b from-indigo-500 to-purple-500 rounded"></div>
                 
-                <div className="relative pl-8 mb-6">
-                  <div className="absolute left-0 top-0 w-1 h-full bg-blue-200 rounded"></div>
-                  <div className="relative mb-6">
-                    <div className="absolute left-[-14px] w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
-                    <p className="text-sm text-blue-500 mb-1">From</p>
-                    <p className="text-blue-900 font-medium">{rideDetails.pickup.address}</p>
+                <div className="relative mb-8">
+                  <div className="absolute left-[-15px] w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                   </div>
-                  <div className="relative">
-                    <div className="absolute left-[-14px] w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
-                    <p className="text-sm text-blue-500 mb-1">To</p>
-                    <p className="text-blue-900 font-medium">{rideDetails.dropoff.address}</p>
-                  </div>
+                  <div className="text-sm text-gray-500 mb-1">From</div>
+                  <div className="text-gray-900 font-medium">{rideDetails.pickup.address}</div>
                 </div>
 
-                <div className="inline-block px-4 py-2 bg-blue-100 rounded-full">
-                  <span className="text-blue-700 font-medium capitalize">{rideDetails.status}</span>
+                <div className="relative">
+                  <div className="absolute left-[-15px] w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                  </div>
+                  <div className="text-sm text-gray-500 mb-1">To</div>
+                  <div className="text-gray-900 font-medium">{rideDetails.dropoff.address}</div>
                 </div>
               </div>
 
-              <div className="rounded-xl overflow-hidden shadow-lg mb-6 transition-all duration-300 hover:shadow-xl">
-                <div ref={mapRef} className="w-full h-[400px]"></div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <span className="text-sm text-gray-500">Status</span>
+                <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium capitalize">
+                  {rideDetails.status}
+                </span>
               </div>
 
               {rideDetails.status !== 'completed' && (
                 <button
                   onClick={getDriverLocation}
                   disabled={isLoading}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
                       <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                      Fetching Location...
+                      Locating Driver...
                     </span>
                   ) : (
                     'Get Driver Location'
@@ -222,7 +383,12 @@ const TrackingComponent = () => {
             </div>
           )}
         </div>
-      </main>
+      </div>
+
+      {/* Map Panel */}
+      <div className="flex-1 relative">
+        <div ref={mapRef} className="absolute inset-0 z-0"></div>
+      </div>
     </div>
   );
 };
