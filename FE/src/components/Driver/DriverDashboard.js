@@ -377,115 +377,199 @@ const DriverDashboard = () => {
   );
 
   // Main dashboard render
-  return (
-    <div className="container mx-auto p-8 bg-gray-100 min-h-screen">
-      <motion.h1 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-4xl font-bold mb-8 text-center text-gray-800"
-      >
-        Driver Dashboard
-      </motion.h1>
-      
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="mb-8 flex justify-center"
-      >
-        <button 
-          onClick={toggleAvailability}
-          className={`px-6 py-3 rounded-full text-lg font-semibold transition duration-300 ${
-            isAvailable 
-              ? 'bg-green-500 hover:bg-green-600 text-white' 
-              : 'bg-red-500 hover:bg-red-600 text-white'
-          }`}
-        >
-          {isAvailable ? 'Available for Jobs' : 'Not Available'}
-        </button>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold mb-4">Job Status Distribution</h2>
-          <Pie data={pieChartData} />
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold mb-4">Performance Metrics</h2>
-          <Bar data={barChartData} options={barChartOptions} />
+return (
+  <div className="min-h-screen bg-[#f8fafc]">
+    {/* Stats Cards */}
+    <div className="grid grid-cols-3 gap-6 p-8">
+      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Total Earnings</p>
+            <div className="flex items-baseline space-x-2">
+              <h2 className="text-2xl font-bold text-gray-900">${analytics.totalEarnings.toFixed(2)}</h2>
+              <span className="text-sm text-green-500">↑ 12.5%</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-          <h3 className="text-xl font-semibold mb-2">Total Earnings</h3>
-          <p className="text-3xl font-bold text-green-600">${analytics.totalEarnings.toFixed(2)}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-          <h3 className="text-xl font-semibold mb-2">Completed Jobs</h3>
-          <p className="text-3xl font-bold text-blue-600">{analytics.completedJobs}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-          <h3 className="text-xl font-semibold mb-2">Average Rating</h3>
-          <p className="text-3xl font-bold text-yellow-600">{analytics.averageRating.toFixed(1)}</p>
+      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Completed Jobs</p>
+            <div className="flex items-baseline space-x-2">
+              <h2 className="text-2xl font-bold text-gray-900">{analytics.completedJobs}</h2>
+              <span className="text-sm text-blue-500">This month</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mb-8">
-        <div className="flex justify-center space-x-4 mb-4">
-          {['active', 'pending', 'incoming'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-full transition duration-300 ${
-                activeTab === tab
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)} Jobs
-            </button>
-          ))}
+      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Average Rating</p>
+            <div className="flex items-baseline space-x-2">
+              <h2 className="text-2xl font-bold text-gray-900">{analytics.averageRating.toFixed(1)}</h2>
+              <span className="text-sm text-gray-500">(342 reviews)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Charts Section */}
+    <div className="grid grid-cols-3 gap-6 px-8 mb-8">
+      <div className="col-span-2 bg-white rounded-2xl p-6 shadow-lg">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Performance Analytics</h2>
+        <div className="h-[300px]">
+          <Bar data={barChartData} options={{
+            ...barChartOptions,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }} />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-lg">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Job Distribution</h2>
+        <Pie data={pieChartData} options={{
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }} />
+      </div>
+    </div>
+
+    {/* Job Management Section */}
+    <div className="px-8 mb-8">
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Recent Jobs</h2>
+          <div className="inline-flex p-1 bg-gray-100 rounded-xl">
+            {['active', 'pending', 'incoming'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)} Jobs
+              </button>
+            ))}
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-4"
           >
             {jobs[activeTab].length === 0 ? (
-              <p className="text-center text-gray-600">No {activeTab} jobs at the moment.</p>
+              <p className="text-center text-gray-500 py-8">No {activeTab} jobs at the moment.</p>
             ) : (
               jobs[activeTab].map(job => (
-                <JobCard 
-                  key={job._id} 
-                  job={job} 
-                  isActive={activeTab === 'active' || activeTab === 'incoming'} 
-                  isPending={activeTab === 'pending'}
-                />
+                <motion.div
+                  key={job._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-white border border-gray-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="grid grid-cols-5 gap-4 items-center">
+                    <div>
+                      <p className="text-sm text-gray-500">Booking ID</p>
+                      <p className="font-mono text-sm text-gray-900">{job._id.slice(0, 10)}...</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">From</p>
+                      <p className="text-sm text-gray-900">{job.pickup.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">To</p>
+                      <p className="text-sm text-gray-900">{job.dropoff.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Price</p>
+                      <p className="text-sm font-medium text-gray-900">${job.price.toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      {isActive && (
+                        <>
+                          <button 
+                            onClick={() => updateJobStatus(job._id, 'en_route')}
+                            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors duration-200"
+                          >
+                            En Route
+                          </button>
+                          <button 
+                            onClick={() => updateJobStatus(job._id, 'completed')}
+                            className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors duration-200"
+                          >
+                            Complete
+                          </button>
+                        </>
+                      )}
+                      {isPending && (
+                        <button 
+                          onClick={() => acceptJob(job._id)}
+                          className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+                        >
+                          Accept Request
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
               ))
             )}
           </motion.div>
         </AnimatePresence>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-center space-x-4"
-      >
-        <Link to="/vehicles" className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition duration-300">
-          Manage Vehicles
-        </Link>
-        <Link to="/profile" className="bg-gray-500 text-white px-6 py-3 rounded-full hover:bg-gray-600 transition duration-300">
-          View Profile
-        </Link>
-      </motion.div>
     </div>
-  );
+
+    {/* Availability Toggle */}
+    <div className="fixed bottom-8 right-8">
+      <button 
+        onClick={toggleAvailability}
+        className={`px-6 py-3 rounded-xl text-white font-medium shadow-lg transition-all duration-300 ${
+          isAvailable 
+            ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
+            : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+        }`}
+      >
+        {isAvailable ? 'Available for Jobs' : 'Not Available'}
+      </button>
+    </div>
+  </div>
+);
 };
 
 export default DriverDashboard;
