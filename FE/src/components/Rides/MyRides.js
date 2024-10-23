@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-react';
+import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -143,31 +143,53 @@ const UserBookings = () => {
   const statusOptions = ['all', 'pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled', 'scheduled'];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">My Rides</h1>
-      
-      <div className="mb-6 flex flex-wrap justify-center gap-2">
-        {statusOptions.map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
-              filter === status
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
-          </button>
-        ))}
-      </div>
+     <div className="container mx-auto px-6 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">My Rides</h1>
 
-      {filteredBookings.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600 text-lg mb-4">No bookings found for the selected filter.</p>
-          <p className="text-gray-500">Try selecting a different status filter or book a new ride.</p>
+        {/* Stats Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        >
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-2xl font-bold text-blue-600">24</h3>
+            <p className="text-gray-600">Total Rides</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-2xl font-bold text-green-600">18</h3>
+            <p className="text-gray-600">Completed</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-2xl font-bold text-yellow-600">5</h3>
+            <p className="text-gray-600">In Progress</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-2xl font-bold text-red-600">1</h3>
+            <p className="text-gray-600">Cancelled</p>
+          </div>
+        </motion.div>
+
+        {/* Status Filters */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {statusOptions.map((status) => (
+            <motion.button
+              key={status}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFilter(status)}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                filter === status
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+            </motion.button>
+          ))}
         </div>
-      ) : (
+
+        {/* Bookings Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredBookings.map((booking, index) => (
             <motion.div
@@ -175,65 +197,112 @@ const UserBookings = () => {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300"
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
             >
-              <div className="px-6 py-4">
-                <div className="font-bold text-xl mb-2 text-gray-800">
-                  Booking #{booking._id}
+              {/* Card Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Booking ID</p>
+                    <h3 className="text-lg font-semibold text-gray-900">#{booking._id.slice(-12)}</h3>
+                  </div>
+                  <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1).replace('_', ' ')}
+                  </span>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-gray-700 flex items-center">
-                    <MapPin className="mr-2 text-blue-500" size={18} />
-                    <span className="font-semibold">From:</span> {booking.pickup.address}
-                  </p>
-                  <p className="text-gray-700 flex items-center">
-                    <MapPin className="mr-2 text-red-500" size={18} />
-                    <span className="font-semibold">To:</span> {booking.dropoff.address}
-                  </p>
-                  {booking.driver && (
-                    <p className="text-gray-700 flex items-center">
-                      <User className="mr-2 text-green-500" size={18} />
-                      <span className="font-semibold">Driver:</span> {booking.driver.username}
-                    </p>
-                  )}
-                  {booking.vehicle && (
-                    <>
-                      <p className="text-gray-700 flex items-center">
-                        <Truck className="mr-2 text-purple-500" size={18} />
-                        <span className="font-semibold">Vehicle:</span> {booking.vehicle.make} {booking.vehicle.model} ({booking.vehicle.vehicleType})
-                      </p>
-                      <p className="text-gray-700 flex items-center">
-                        <Tag className="mr-2 text-yellow-500" size={18} />
-                        <span className="font-semibold">License:</span> {booking.vehicle.licensePlate}
-                      </p>
-                    </>
-                  )}
-                  <p className="text-gray-700 flex items-center">
-                    <DollarSign className="mr-2 text-green-500" size={18} />
-                    <span className="font-semibold">Price:</span> ${booking.price?.toFixed(2) || '0.00'}
-                  </p>
-                  <p className="text-gray-700 flex items-center">
-                    <Calendar className="mr-2 text-blue-500" size={18} />
-                    <span className="font-semibold">Date:</span> {formatDate(booking.createdAt)}
-                  </p>
-                  {booking.status === 'scheduled' && booking.scheduledTime && (
-                    <p className="text-gray-700 flex items-center">
-                      <Clock className="mr-2 text-indigo-500" size={18} />
-                      <span className="font-semibold">Scheduled:</span> {formatDate(booking.scheduledTime)}
-                    </p>
-                  )}
+
+                {/* Route Information */}
+                <div className="relative pl-8 mt-6">
+                  <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"/>
+                  <div className="relative mb-6">
+                    <div className="absolute left-[-1.25rem] w-3 h-3 rounded-full bg-blue-500"/>
+                    <p className="text-sm text-gray-500">From</p>
+                    <p className="text-gray-900">{booking.pickup.address}</p>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute left-[-1.25rem] w-3 h-3 rounded-full bg-red-500"/>
+                    <p className="text-sm text-gray-500">To</p>
+                    <p className="text-gray-900">{booking.dropoff.address}</p>
+                  </div>
                 </div>
               </div>
-              <div className="px-6 pt-4 pb-2">
-                <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(booking.status)}`}>
-                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1).replace('_', ' ')}
-                </span>
+
+              {/* Card Details */}
+              <div className="p-6 bg-gray-50">
+                <div className="grid grid-cols-2 gap-4">
+                  {booking.driver && (
+                    <div>
+                      <div className="flex items-center mb-1">
+                        <User className="w-4 h-4 text-gray-400 mr-2"/>
+                        <p className="text-sm text-gray-500">Driver</p>
+                      </div>
+                      <p className="text-gray-900 font-medium">{booking.driver.username}</p>
+                    </div>
+                  )}
+                  {booking.vehicle && (
+                    <div>
+                      <div className="flex items-center mb-1">
+                        <Truck className="w-4 h-4 text-gray-400 mr-2"/>
+                        <p className="text-sm text-gray-500">Vehicle</p>
+                      </div>
+                      <p className="text-gray-900 font-medium">
+                        {booking.vehicle.make} {booking.vehicle.model}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <Tag className="w-4 h-4 text-gray-400 mr-2"/>
+                      <p className="text-sm text-gray-500">License</p>
+                    </div>
+                    <p className="text-gray-900 font-medium">
+                      {booking.vehicle?.licensePlate}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <DollarSign className="w-4 h-4 text-gray-400 mr-2"/>
+                      <p className="text-sm text-gray-500">Price</p>
+                    </div>
+                    <p className="text-emerald-600 font-semibold">
+                      ${booking.price?.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 text-gray-400 mr-2"/>
+                    <p className="text-sm text-gray-500">{formatDate(booking.createdAt)}</p>
+                  </div>
+                  {booking.status === 'scheduled' && booking.scheduledTime && (
+                    <div className="flex items-center mt-2">
+                      <Clock className="w-4 h-4 text-gray-400 mr-2"/>
+                      <p className="text-sm text-gray-500">{formatDate(booking.scheduledTime)}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
-      )}
-    </div>
+
+        {/* Empty State */}
+        {filteredBookings.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 bg-white rounded-xl shadow-sm"
+          >
+            <p className="text-gray-600 text-lg mb-2">No rides found</p>
+            <p className="text-gray-500">Try selecting a different status filter</p>
+          </motion.div>
+        )}
+      </div>
+  );
+};
+
+export default UserBookings;
   );
 };
 
