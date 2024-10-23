@@ -5,6 +5,7 @@ import DatePicker from 'react-datepicker'; // You'll need to install this packag
 import "react-datepicker/dist/react-datepicker.css";
 import { apiCall } from '../../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { MapPin, Car, Clock, Users, ChevronDown, Search, Crosshair, ZoomIn, ZoomOut, Calendar } from 'lucide-react';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
@@ -372,7 +373,7 @@ const BookingComponent = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="w-full h-screen flex">
         {/* Left Panel */}
-        <Card className="w-[450px] h-full rounded-none p-6 bg-white shadow-lg z-10 flex flex-col">
+<div className="w-[450px] h-full bg-white shadow-lg z-10 flex flex-col p-6">
           {/* Header */}
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
@@ -552,7 +553,7 @@ const BookingComponent = () => {
               {isLoading ? 'Processing...' : isScheduleFuture ? 'Schedule Ride' : 'Book Now'}
             </button>
           </div>
-        </Card>
+        </div>
 
         {/* Map Section */}
         <div className="flex-1">
