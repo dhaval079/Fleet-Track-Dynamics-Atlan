@@ -10,6 +10,7 @@ const TrackingComponent = () => {
   const [rideDetails, setRideDetails] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [map, setMap] = useState(null);
+  const [socket, setSocket] = useState(null);
   const [markers, setMarkers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
