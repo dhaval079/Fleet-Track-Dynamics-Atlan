@@ -34,7 +34,7 @@ const TrackingComponent = () => {
 
       socket.on('connect_error', (error) => {
         console.error('Socket connection error:', error);
-        setError('Connection error. Retrying...');
+        // setError('Connection error. Retrying...');
       });
 
       socket.on('disconnect', () => {
@@ -55,7 +55,7 @@ const TrackingComponent = () => {
       };
     } catch (err) {
       console.error('Socket initialization error:', err);
-      setError('Failed to establish connection');
+      // setError('Failed to establish connection');
     }
   }, []);
 
