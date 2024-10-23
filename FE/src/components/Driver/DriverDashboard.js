@@ -495,60 +495,61 @@ return (
             {jobs[activeTab].length === 0 ? (
               <p className="text-center text-gray-500 py-8">No {activeTab} jobs at the moment.</p>
             ) : (
-              jobs[activeTab].map(job => (
-                <motion.div
-                  key={job._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="bg-white border border-gray-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="grid grid-cols-5 gap-4 items-center">
-                    <div>
-                      <p className="text-sm text-gray-500">Booking ID</p>
-                      <p className="font-mono text-sm text-gray-900">{job._id.slice(0, 10)}...</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">From</p>
-                      <p className="text-sm text-gray-900">{job.pickup.address}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">To</p>
-                      <p className="text-sm text-gray-900">{job.dropoff.address}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Price</p>
-                      <p className="text-sm font-medium text-gray-900">${job.price.toFixed(2)}</p>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      {isActive && (
-                        <>
-                          <button 
-                            onClick={() => updateJobStatus(job._id, 'en_route')}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors duration-200"
-                          >
-                            En Route
-                          </button>
-                          <button 
-                            onClick={() => updateJobStatus(job._id, 'completed')}
-                            className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors duration-200"
-                          >
-                            Complete
-                          </button>
-                        </>
-                      )}
-                      {isPending && (
-                        <button 
-                          onClick={() => acceptJob(job._id)}
-                          className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
-                        >
-                          Accept Request
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))
+             // Inside the JobCard mapping section, replace the existing code with:
+{jobs[activeTab].map(job => (
+  <motion.div
+    key={job._id}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    className="bg-white border border-gray-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+  >
+    <div className="grid grid-cols-5 gap-4 items-center">
+      <div>
+        <p className="text-sm text-gray-500">Booking ID</p>
+        <p className="font-mono text-sm text-gray-900">{job._id.slice(0, 10)}...</p>
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">From</p>
+        <p className="text-sm text-gray-900">{job.pickup.address}</p>
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">To</p>
+        <p className="text-sm text-gray-900">{job.dropoff.address}</p>
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">Price</p>
+        <p className="text-sm font-medium text-gray-900">${job.price.toFixed(2)}</p>
+      </div>
+      <div className="flex justify-end space-x-2">
+        {activeTab === 'active' && (
+          <>
+            <button 
+              onClick={() => updateJobStatus(job._id, 'en_route')}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors duration-200"
+            >
+              En Route
+            </button>
+            <button 
+              onClick={() => updateJobStatus(job._id, 'completed')}
+              className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors duration-200"
+            >
+              Complete
+            </button>
+          </>
+        )}
+        {activeTab === 'pending' && (
+          <button 
+            onClick={() => acceptJob(job._id)}
+            className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+          >
+            Accept Request
+          </button>
+        )}
+      </div>
+    </div>
+  </motion.div>
+))
             )}
           </motion.div>
         </AnimatePresence>
