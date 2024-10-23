@@ -370,184 +370,181 @@ const BookingComponent = () => {
   };
 
  return (
-    <div className="min-h-screen bg-gray-50">
+   <div className="min-h-screen bg-gray-50">
       <div className="w-full h-screen flex">
         {/* Left Panel */}
-<div className="w-[450px] h-full bg-white shadow-lg z-10 flex flex-col p-6">
+        <div className="w-[450px] h-full bg-white shadow-lg z-10 flex flex-col">
           {/* Header */}
-          <div className="flex items-center space-x-3 mb-8">
+          <div className="flex items-center space-x-3 p-6 border-b">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
               <Car className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-xl font-bold text-gray-900">RideStream</h1>
           </div>
 
-          {/* Location Inputs */}
-          <div className="relative mb-8">
-            <div className="absolute left-4 top-4 bottom-4 flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <div className="w-0.5 h-full bg-gray-200 my-2" />
-              <div className="w-3 h-3 rounded-full bg-red-500" />
-            </div>
-            
-            <div className="space-y-2">
+          <div className="p-6 flex-1 overflow-y-auto space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Book a Ride</h2>
+
+            {/* Location Inputs */}
+            <div className="space-y-4">
               <div className="relative">
+                <div className="absolute left-4 top-3">
+                  <MapPin className="w-5 h-5 text-blue-500" />
+                </div>
                 <input
                   ref={originInputRef}
                   type="text"
-                  placeholder="Enter pickup location"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Enter origin"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
-                <Crosshair className="absolute right-4 top-4 text-gray-400 w-5 h-5" />
               </div>
               <div className="relative">
+                <div className="absolute left-4 top-3">
+                  <MapPin className="w-5 h-5 text-red-500" />
+                </div>
                 <input
                   ref={destinationInputRef}
                   type="text"
                   placeholder="Enter destination"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
-                <Search className="absolute right-4 top-4 text-gray-400 w-5 h-5" />
               </div>
             </div>
-          </div>
 
-          {/* Vehicle Selection */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Vehicle</h3>
-            <div className="space-y-3">
-              {vehicles.map((vehicle) => (
-                <div
-                  key={vehicle._id}
-                  onClick={() => setSelectedVehicle(vehicle._id)}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                    selectedVehicle === vehicle._id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-200'
+            {/* Vehicle Selection Dropdown */}
+            <div>
+              <select
+                value={selectedVehicle}
+                onChange={(e) => setSelectedVehicle(e.target.value)}
+                className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white"
+              >
+                <option value="">Select a vehicle</option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle._id} value={vehicle._id}>
+                    {vehicle.make} {vehicle.model} ({vehicle.vehicleType})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Calculate Route Button */}
+            <button
+              onClick={calculateRoute}
+              className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Calculating...' : 'Calculate Route'}
+            </button>
+
+            {/* Route Details */}
+            {distance && duration && (
+              <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Distance:</span>
+                  <span className="font-medium">{distance}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium">{duration}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Estimated Price:</span>
+                  <span className="font-medium">${estimatedPrice}</span>
+                </div>
+                <input
+                  type="number"
+                  value={userPrice}
+                  onChange={(e) => setUserPrice(e.target.value)}
+                  className="w-full mt-2 p-3 rounded-lg border border-gray-200"
+                  placeholder="Enter price (must be >= estimated price)"
+                />
+              </div>
+            )}
+
+            {/* Selection Mode Toggle */}
+            <div className="space-y-2">
+              <label className="text-gray-700 font-medium">Selection Mode:</label>
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <button
+                  onClick={() => setSelectionMode('manual')}
+                  className={`p-3 rounded-lg font-medium transition-colors ${
+                    selectionMode === 'manual'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex space-x-4">
-                      <Car className={`w-6 h-6 ${selectedVehicle === vehicle._id ? 'text-blue-500' : 'text-gray-500'}`} />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{`${vehicle.make} ${vehicle.model}`}</h4>
-                        <p className="text-sm text-gray-500">{vehicle.vehicleType}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  Manual
+                </button>
+                <button
+                  onClick={() => setSelectionMode('automated')}
+                  className={`p-3 rounded-lg font-medium transition-colors ${
+                    selectionMode === 'automated'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Automated
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Selection Mode */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Selection Mode</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setSelectionMode('manual')}
-                className={`py-3 px-4 rounded-xl font-medium transition-colors ${
-                  selectionMode === 'manual'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Manual
-              </button>
-              <button
-                onClick={() => setSelectionMode('automated')}
-                className={`py-3 px-4 rounded-xl font-medium transition-colors ${
-                  selectionMode === 'automated'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Automated
-              </button>
-            </div>
-          </div>
-
-          {/* Driver Selection (Manual Mode) */}
-          {selectionMode === 'manual' && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Driver</h3>
+            {/* Driver Selection or Find Driver */}
+            {selectionMode === 'manual' ? (
               <select
                 value={selectedDriver}
                 onChange={(e) => setSelectedDriver(e.target.value)}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                <option value="">Choose a driver</option>
+                <option value="">Select a driver</option>
                 {drivers.map(driver => (
                   <option key={driver._id} value={driver._id}>{driver.username}</option>
                 ))}
               </select>
-            </div>
-          )}
-
-          {/* Schedule Options */}
-          <div className="mb-6">
-            <label className="flex items-center space-x-2 mb-4">
-              <input
-                type="checkbox"
-                checked={isScheduleFuture}
-                onChange={(e) => setIsScheduleFuture(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-500"
-              />
-              <span className="text-gray-700">Schedule for later</span>
-            </label>
-
-            {isScheduleFuture && (
-              <div className="space-y-2">
-                <input
-                  type="date"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  min={getTomorrowDate()}
-                  className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
+            ) : (
+              <button
+                onClick={findMatchingDriver}
+                className="w-full py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Finding Driver...' : 'Find Matching Driver'}
+              </button>
             )}
-          </div>
 
-          {/* Route Details */}
-          {distance && duration && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-              <div className="space-y-2">
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Distance:</span>
-                  <span className="font-medium text-gray-900">{distance}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Duration:</span>
-                  <span className="font-medium text-gray-900">{duration}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Estimated Price:</span>
-                  <span className="font-medium text-gray-900">${estimatedPrice}</span>
-                </p>
-              </div>
+            {/* Schedule Checkbox */}
+            <div className="space-y-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={isScheduleFuture}
+                  onChange={(e) => setIsScheduleFuture(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-500"
+                />
+                <span className="text-gray-700">Schedule for later</span>
+              </label>
+
+              {isScheduleFuture && (
+                <div className="space-y-2">
+                  <input
+                    type="date"
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    min={getTomorrowDate()}
+                    className="w-full p-3 rounded-lg border border-gray-200"
+                  />
+                  <input
+                    type="time"
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    className="w-full p-3 rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="mt-auto space-y-4">
-            <button
-              onClick={calculateRoute}
-              className="w-full py-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={isLoading || !selectedVehicle}
-            >
-              Calculate Route
-            </button>
-
+            {/* Book Now Button */}
             <button
               onClick={bookRide}
-              className="w-full py-4 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               disabled={isLoading || (selectionMode === 'automated' && !matchedDriver) || !selectedVehicle}
             >
               {isLoading ? 'Processing...' : isScheduleFuture ? 'Schedule Ride' : 'Book Now'}
