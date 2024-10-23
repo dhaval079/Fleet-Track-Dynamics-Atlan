@@ -510,6 +510,34 @@ const BookingComponent = () => {
               </button>
             )}
 
+{selectionMode === 'automated' && (
+  <>
+    <button
+      onClick={findMatchingDriver}
+      className="w-full py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+      disabled={isLoading}
+    >
+      {isLoading ? 'Finding Driver...' : 'Find Matching Driver'}
+    </button>
+
+    {/* Matched Driver Display */}
+    {matchedDriver && (
+      <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-100">
+        <h3 className="font-semibold text-gray-900 mb-2">Matched Driver</h3>
+        <div className="space-y-1">
+          <p className="text-gray-700">
+            <span className="font-medium">Name:</span> {matchedDriver.username}
+          </p>
+          <p className="text-gray-700">
+            <span className="font-medium">Location:</span>{' '}
+            {matchedDriver.currentLocation.coordinates[1]}, {matchedDriver.currentLocation.coordinates[0]}
+          </p>
+        </div>
+      </div>
+    )}
+  </>
+)}
+
             {/* Schedule Checkbox */}
             <div className="space-y-4">
               <label className="flex items-center space-x-2">
