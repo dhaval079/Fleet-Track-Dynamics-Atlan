@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const statusOptions = ['all', 'pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled', 'scheduled'];
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -45,7 +47,7 @@ const MyRides = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/v2/bookings/userbookings`, {
+      const response = await fetch(`${BACKEND_URL}/api/v2/bookings/userbookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
