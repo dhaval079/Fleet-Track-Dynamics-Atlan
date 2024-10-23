@@ -496,7 +496,7 @@ return (
               <p className="text-center text-gray-500 py-8">No {activeTab} jobs at the moment.</p>
             ) : (
              // Inside the JobCard mapping section, replace the existing code with:
-{jobs[activeTab].map(job => (
+jobs[activeTab].map(job => (
   <motion.div
     key={job._id}
     initial={{ opacity: 0, y: 20 }}
