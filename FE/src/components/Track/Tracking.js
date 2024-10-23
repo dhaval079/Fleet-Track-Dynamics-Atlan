@@ -70,7 +70,7 @@ const TrackingComponent = () => {
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}`;
+    script.src = `https://maps.gomaps.pro/maps/api/js?key=${API_KEY}`;
     script.async = true;
     script.defer = true;
     script.onload = initMap;
