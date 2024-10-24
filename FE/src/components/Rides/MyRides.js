@@ -5,12 +5,8 @@ import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-re
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-<<<<<<< HEAD
-const BACKEND_URL = 'https://dhavalrupapara.me';
-=======
 const statusOptions = ['all', 'pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled', 'scheduled'];
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
->>>>>>> d265edd8d958143196ace7df375885e063f3cc63
+const BACKEND_URL = 'https://dhavalrupapara.me';
 
 
 const getStatusColor = (status) => {

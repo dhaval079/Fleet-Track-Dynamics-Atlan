@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
-<<<<<<< HEAD
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
-const BACKEND_URL = 'https://dhavalrupapara.me';
-=======
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV';
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 const NEW_YORK_COORDINATES = { lat: 40.7128, lng: -74.0060 };
->>>>>>> d265edd8d958143196ace7df375885e063f3cc63
 
 const TrackingComponent = () => {
   const [bookingId, setBookingId] = useState('');
