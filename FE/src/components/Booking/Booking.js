@@ -5,6 +5,7 @@ import DatePicker from 'react-datepicker'; // You'll need to install this packag
 import "react-datepicker/dist/react-datepicker.css";
 import { apiCall } from '../../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { MapPin, Car, Clock, Users, ChevronDown, Search, Crosshair, ZoomIn, ZoomOut, Calendar } from 'lucide-react';
 
 const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
 const BACKEND_URL = 'https://dhavalrupapara.me';
@@ -368,146 +369,212 @@ const BookingComponent = () => {
     }
   };
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="w-1/3 p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-6">Book a Ride</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-
-        <select
-          value={selectedVehicle}
-          onChange={(e) => setSelectedVehicle(e.target.value)}
-          className="w-full p-2 mb-4 border rounded"
-        >
-          <option value="">Select a vehicle</option>
-          {vehicles.map(vehicle => (
-            <option key={vehicle._id} value={vehicle._id}>{vehicle.make} {vehicle.model} ({vehicle.vehicleType})</option>
-          ))}
-        </select>
-
-        <input ref={originInputRef} type="text" placeholder="Enter origin" className="w-full p-2 mb-4 border rounded" />
-        <input ref={destinationInputRef} type="text" placeholder="Enter destination" className="w-full p-2 mb-4 border rounded" />
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={calculateRoute}
-          className="w-full p-2 mb-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Calculating...' : 'Calculate Route'}
-        </motion.button>
-
-        {distance && duration && (
-          <div className="mb-4">
-            <p className="font-semibold">Distance: {distance}</p>
-            <p className="font-semibold">Duration: {duration}</p>
-            <p className="font-semibold">Estimated Price: ${estimatedPrice}</p>
-            <input
-              type="number"
-              value={userPrice}
-              onChange={(e) => setUserPrice(e.target.value)}
-              min={estimatedPrice}
-              step="0.01"
-              className="w-full p-2 mt-2 border rounded"
-              placeholder="Enter price (must be >= estimated price)"
-            />
+ return (
+   <div className="min-h-screen bg-gray-50">
+      <div className="w-full h-screen flex">
+        {/* Left Panel */}
+        <div className="w-[450px] h-full bg-white shadow-lg z-10 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center space-x-3 p-6 border-b">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+              <Car className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900">RideStream</h1>
           </div>
-        )}
 
-        <div className="mb-4">
-          <label className="block mb-2">Selection Mode:</label>
-          <div className="flex justify-between">
+          <div className="p-6 flex-1 overflow-y-auto space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Book a Ride</h2>
+
+            {/* Location Inputs */}
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="absolute left-4 top-3">
+                  <MapPin className="w-5 h-5 text-blue-500" />
+                </div>
+                <input
+                  ref={originInputRef}
+                  type="text"
+                  placeholder="Enter origin"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute left-4 top-3">
+                  <MapPin className="w-5 h-5 text-red-500" />
+                </div>
+                <input
+                  ref={destinationInputRef}
+                  type="text"
+                  placeholder="Enter destination"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Vehicle Selection Dropdown */}
+            <div>
+              <select
+                value={selectedVehicle}
+                onChange={(e) => setSelectedVehicle(e.target.value)}
+                className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white"
+              >
+                <option value="">Select a vehicle</option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle._id} value={vehicle._id}>
+                    {vehicle.make} {vehicle.model} ({vehicle.vehicleType})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Calculate Route Button */}
             <button
-              onClick={() => setSelectionMode('manual')}
-              className={`w-1/2 p-2 ${selectionMode === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-200'} rounded-l`}
+              onClick={calculateRoute}
+              className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+              disabled={isLoading}
             >
-              Manual
+              {isLoading ? 'Calculating...' : 'Calculate Route'}
             </button>
+
+            {/* Route Details */}
+            {distance && duration && (
+              <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Distance:</span>
+                  <span className="font-medium">{distance}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium">{duration}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Estimated Price:</span>
+                  <span className="font-medium">${estimatedPrice}</span>
+                </div>
+                <input
+                  type="number"
+                  value={userPrice}
+                  onChange={(e) => setUserPrice(e.target.value)}
+                  className="w-full mt-2 p-3 rounded-lg border border-gray-200"
+                  placeholder="Enter price (must be >= estimated price)"
+                />
+              </div>
+            )}
+
+            {/* Selection Mode Toggle */}
+            <div className="space-y-2">
+              <label className="text-gray-700 font-medium">Selection Mode:</label>
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <button
+                  onClick={() => setSelectionMode('manual')}
+                  className={`p-3 rounded-lg font-medium transition-colors ${
+                    selectionMode === 'manual'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Manual
+                </button>
+                <button
+                  onClick={() => setSelectionMode('automated')}
+                  className={`p-3 rounded-lg font-medium transition-colors ${
+                    selectionMode === 'automated'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Automated
+                </button>
+              </div>
+            </div>
+
+          {/* Driver Selection or Find Driver */}
+{selectionMode === 'manual' ? (
+  <select
+    value={selectedDriver}
+    onChange={(e) => setSelectedDriver(e.target.value)}
+    className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+  >
+    <option value="">Select a driver</option>
+    {drivers.map(driver => (
+      <option key={driver._id} value={driver._id}>{driver.username}</option>
+    ))}
+  </select>
+) : (
+  <button
+    onClick={findMatchingDriver}
+    className="w-full py-3 px-4 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+    disabled={isLoading}
+  >
+    {isLoading ? 'Finding Driver...' : 'Find Matching Driver'}
+  </button>
+)}
+
+{/* Show matched driver info when available */}
+{selectionMode === 'automated' && matchedDriver && (
+  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+    <h3 className="font-semibold text-gray-900 mb-2">Matched Driver</h3>
+    <div className="space-y-2">
+      <p className="text-gray-700">
+        <span className="font-medium">Name:</span> {matchedDriver.username}
+      </p>
+      <p className="text-gray-700">
+        <span className="font-medium">Location:</span>{' '}
+        {matchedDriver.currentLocation.coordinates[1]}, {matchedDriver.currentLocation.coordinates[0]}
+      </p>
+    </div>
+  </div>
+)}
+
+            {/* Schedule Checkbox */}
+            <div className="space-y-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={isScheduleFuture}
+                  onChange={(e) => setIsScheduleFuture(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-500"
+                />
+                <span className="text-gray-700">Schedule for later</span>
+              </label>
+
+              {isScheduleFuture && (
+                <div className="space-y-2">
+                  <input
+                    type="date"
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    min={getTomorrowDate()}
+                    className="w-full p-3 rounded-lg border border-gray-200"
+                  />
+                  <input
+                    type="time"
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    className="w-full p-3 rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Book Now Button */}
             <button
-              onClick={() => setSelectionMode('automated')}
-              className={`w-1/2 p-2 ${selectionMode === 'automated' ? 'bg-blue-500 text-white' : 'bg-gray-200'} rounded-r`}
+              onClick={bookRide}
+              className="w-full py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+              disabled={isLoading || (selectionMode === 'automated' && !matchedDriver) || !selectedVehicle}
             >
-              Automated
+              {isLoading ? 'Processing...' : isScheduleFuture ? 'Schedule Ride' : 'Book Now'}
             </button>
           </div>
         </div>
 
-        {selectionMode === 'manual' && (
-          <select
-            value={selectedDriver}
-            onChange={(e) => setSelectedDriver(e.target.value)}
-            className="w-full p-2 mb-4 border rounded"
-          >
-            <option value="">Select a driver</option>
-            {drivers.map(driver => (
-              <option key={driver._id} value={driver._id}>{driver.username}</option>
-            ))}
-          </select>
-        )}
-
-        {selectionMode === 'automated' && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={findMatchingDriver}
-            className="w-full p-2 mb-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Finding Driver...' : 'Find Matching Driver'}
-          </motion.button>
-        )}
-
-        {selectionMode === 'automated' && matchedDriver && (
-          <div className="mb-4 p-4 bg-blue-100 rounded">
-            <h2 className="font-bold text-lg mb-2">Matched Driver</h2>
-            <p>Name: {matchedDriver.username}</p>
-            <p>Location: {matchedDriver.currentLocation.coordinates[1]}, {matchedDriver.currentLocation.coordinates[0]}</p>
+        {/* Map Section */}
+        <div className="flex-1">
+          <div className="h-full relative" ref={mapRef}>
+            {/* Map controls will be rendered here by Google Maps */}
           </div>
-        )}
-
-        <div className="mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={isScheduleFuture}
-              onChange={(e) => setIsScheduleFuture(e.target.checked)}
-              className="mr-2"
-            />
-            Schedule for later
-          </label>
         </div>
-
-        {isScheduleFuture && (
-          <div className="mb-4">
-            <input
-              type="date"
-              value={scheduleDate}
-              onChange={(e) => setScheduleDate(e.target.value)}
-              min={getTomorrowDate()} // Prevent selecting dates before tomorrow
-              className="w-full p-2 mb-2 border rounded"
-            />
-            <input
-              type="time"
-              value={scheduleTime}
-              onChange={(e) => setScheduleTime(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-        )}
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={bookRide}
-          className="w-full p-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-          disabled={isLoading || (selectionMode === 'automated' && !matchedDriver) || !selectedVehicle}
-        >
-          {isLoading ? 'Booking...' : isScheduleFuture ? 'Schedule Ride' : 'Book Now'}
-        </motion.button>
-
       </div>
-      <div className="w-2/3" ref={mapRef}></div>
     </div>
   );
 };
