@@ -5,7 +5,7 @@ import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-re
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = 'https://dhavalrupapara.me';
 
 const UserBookings = () => {
   const navigate = useNavigate();
