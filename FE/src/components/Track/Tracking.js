@@ -13,52 +13,72 @@ const TrackingComponent = () => {
   const [markers, setMarkers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [socketInstance, setSocketInstance] = useState(null);
   const mapRef = useRef(null);
 
-  useEffect(() => {
-    // Initialize socket connection
-    try {
-      const socket = io(BACKEND_URL, {
-        query: { token: localStorage.getItem('token') },
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
-      });
+ const [socket, setSocket] = useState(null);
 
-      socket.on('connect', () => {
-        console.log('Socket connected');
-        setError(null);
-      });
+// Replace the socket initialization useEffect with this:
+useEffect(() => {
+  try {
+    const newSocket = io(BACKEND_URL, {
+      query: { token: localStorage.getItem('token')}
+      // transports: ['websocket'], // Force WebSocket transport
+      // reconnection: true,        // Enable reconnection
+      // reconnectionAttempts: 5,   // Try to reconnect 5 times
+      // reconnectionDelay: 1000,   // Wait 1 second between attempts
+      // timeout: 10000            // Connection timeout in ms
+    });
 
-      socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        // setError('Connection error. Retrying...');
-      });
+    newSocket.on('connect', () => {
+      console.log('Socket connected successfully');
+      setError(null);
+    });
 
-      socket.on('disconnect', () => {
-        console.log('Socket disconnected');
-      });
+    newSocket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err);
+      setError('Connection error. Please check your network.');
+    });
 
-      socket.on('locationUpdate', (location) => {
-        setCurrentLocation(location);
-        updateMarkerPosition('current', location);
-      });
+    newSocket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      if (reason === 'io server disconnect') {
+        // Server disconnected the socket, try to reconnect
+        newSocket.connect();
+      }
+    });
 
-      setSocketInstance(socket);
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log('Socket reconnected after', attemptNumber, 'attempts');
+      // Resubscribe to booking updates if we were tracking one
+      if (rideDetails?._id) {
+        newSocket.emit('subscribe', rideDetails._id);
+      }
+    });
 
-      return () => {
-        if (socket) {
-          socket.disconnect();
-        }
-      };
-    } catch (err) {
-      console.error('Socket initialization error:', err);
-      // setError('Failed to establish connection');
-    }
-  }, []);
+    newSocket.on('locationUpdate', (location) => {
+      console.log('Received location update:', location);
+      setCurrentLocation(location);
+      updateMarkerPosition('current', location);
+    });
 
+    setSocket(newSocket);
+
+    // Cleanup function
+    return () => {
+      if (newSocket) {
+        newSocket.removeAllListeners();
+        newSocket.close();
+      }
+    };
+  } catch (error) {
+    console.error('Socket initialization error:', error);
+    setError('Failed to initialize connection');
+  }
+}, []); // Empty dependency array to run only once on mount
+
+
+
+  
   useEffect(() => {
     loadGoogleMapsScript();
   }, []);
@@ -208,41 +228,47 @@ const updateMarkerPosition = (markerType, position) => {
   }
 };
 
-  const fetchRideDetails = async () => {
-    if (!bookingId.trim()) {
-      setError('Please enter a booking ID');
-      return;
+ // Update the fetchRideDetails function:
+const fetchRideDetails = async () => {
+  if (!bookingId.trim()) {
+    setError('Please enter a booking ID');
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(response.status === 404 ? 'Booking not found' : 'Failed to fetch ride details');
     }
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(response.status === 404 ? 'Booking not found' : 'Failed to fetch ride details');
-      }
-
-      const data = await response.json();
-      setRideDetails(data.booking);
-      
-      if (socketInstance) {
-        socketInstance.emit('subscribe', bookingId);
-      }
-
-      updateMap(data.booking);
-    } catch (error) {
-      console.error('Error fetching ride details:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+    const data = await response.json();
+    setRideDetails(data.booking);
+    
+    // Ensure socket is connected before subscribing
+    if (socket && socket.connected) {
+      console.log('Subscribing to booking updates:', bookingId);
+      socket.emit('subscribe', bookingId);
+    } else {
+      console.warn('Socket not connected, unable to subscribe to updates');
+      setError('Connection issue: Real-time updates may be unavailable');
     }
-  };
+
+    updateMap(data.booking);
+  } catch (error) {
+    console.error('Error fetching ride details:', error);
+    setError(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const getDriverLocation = async () => {
     if (!rideDetails?._id) return;
