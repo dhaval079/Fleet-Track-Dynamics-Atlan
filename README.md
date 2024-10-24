@@ -2,6 +2,13 @@
 
 This repository contains the full-stack implementation of a highly scalable on-demand logistics platform for goods transportation, including both backend and frontend components.
 
+# Resources
+
+Backend : https://dhavalrupapara.me/
+ER Diagram : https://claude.site/artifacts/b2e250b7-7fd9-4af9-a0e7-a75f4d2b387d
+Documentation : https://lace-ease-c7b.notion.site/On-Demand-Logistics-Platform-for-Goods-Transportation-Ride-Stream-123e42a2fef180d3b877f840aeaaffc9
+
+
 ## Table of Contents
 
 1. [Technologies Used](#technologies-used)
