@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Shield, User, Truck, ArrowRight, Mail, Lock, Phone, MapPin, CreditCard, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const BACKEND_URL = 'https://dhavalrupapara.me';
 
@@ -60,15 +59,18 @@ export default function Auth() {
         {/* Test Account Cards */}
         <div className="grid md:grid-cols-3 gap-6">
           {testAccounts.map((account) => (
-            <Card key={account.role} 
-                  className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br ${account.gradient} border-0`}>
-              <CardHeader className="text-white space-y-4 text-center pb-8">
-                <div className="mx-auto bg-white/10 p-3 rounded-xl">
-                  {account.icon}
+            <div 
+              key={account.role}
+              className={`rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br ${account.gradient}`}
+            >
+              <div className="p-6 space-y-6">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto bg-white/10 p-3 rounded-xl w-fit">
+                    {account.icon}
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">{account.role}</h3>
                 </div>
-                <CardTitle className="text-2xl">{account.role}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 bg-white/10 px-3 py-2 rounded-lg">
                     <Mail size={16} className="text-white/60" />
@@ -89,6 +91,7 @@ export default function Auth() {
                     />
                   </div>
                 </div>
+
                 <button 
                   onClick={() => handleTestLogin(account.email, account.password)}
                   className={`w-full bg-white ${account.textColor} py-2 rounded-lg font-medium ${account.hoverColor} transition-colors flex items-center justify-center space-x-2`}
@@ -97,20 +100,19 @@ export default function Auth() {
                   <span>{loading ? 'Logging in...' : `Login as ${account.role}`}</span>
                   {!loading && <ArrowRight size={16} />}
                 </button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
 
         {/* Custom Login Form */}
         <div className="mt-12 max-w-md mx-auto">
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader>
-              <CardTitle className="text-xl text-white text-center">
+          <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+            <div className="p-6 space-y-6">
+              <h3 className="text-xl font-bold text-white text-center">
                 {isLogin ? 'Custom Login' : 'Create Account'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
                   <div className="flex items-center space-x-2 bg-white/10 px-3 py-2 rounded-lg">
@@ -227,7 +229,7 @@ export default function Auth() {
                 </button>
               </form>
 
-              <p className="mt-4 text-center text-slate-400">
+              <p className="text-center text-slate-400">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <button 
                   onClick={() => setIsLogin(!isLogin)} 
@@ -236,8 +238,8 @@ export default function Auth() {
                   {isLogin ? 'Sign Up' : 'Login'}
                 </button>
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
