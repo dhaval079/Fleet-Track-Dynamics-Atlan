@@ -193,7 +193,7 @@ const MyRides = () => {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">Booking ID</p>
-                      <h3 className="text-lg font-semibold text-gray-900"># {booking._id}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">#{booking._id}</h3>
                     </div>
                     <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                       {booking.status.charAt(0).toUpperCase() + booking.status.slice(1).replace('_', ' ')}
