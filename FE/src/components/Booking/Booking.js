@@ -7,7 +7,7 @@ import { apiCall } from '../../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { MapPin, Car, Clock, Users, ChevronDown, Search, Crosshair, ZoomIn, ZoomOut, Calendar } from 'lucide-react';
 
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
 const BACKEND_URL = 'https://dhavalrupapara.me';
 
 

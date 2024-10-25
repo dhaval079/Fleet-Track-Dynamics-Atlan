@@ -586,7 +586,7 @@ import { io } from 'socket.io-client';
 import DatePicker from 'react-datepicker'; // You'll need to install this package
 import "react-datepicker/dist/react-datepicker.css";
 
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
 
 const BookingComponent = () => {
   const mapRef = useRef(null);
@@ -1559,7 +1559,7 @@ File: src/components/Driver/DriverLocationUpdate.js
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
 
 const DriverLocationUpdate = () => {
   const [address, setAddress] = useState('');
@@ -1969,7 +1969,7 @@ File: src/components/Track/Tracking.js
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV'; // Replace with your actual API key
+const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
 
 const TrackingComponent = () => {
   const [bookingId, setBookingId] = useState('');

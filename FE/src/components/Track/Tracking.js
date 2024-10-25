@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
-const API_KEY = 'AlzaSy4STdH82R8gHqMhU-oldo3-trDZJZKBWBV';
+const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF';
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 const NEW_YORK_COORDINATES = { lat: 40.7128, lng: -74.0060 };
 
