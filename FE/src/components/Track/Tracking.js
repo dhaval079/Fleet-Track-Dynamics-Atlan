@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
 const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF';
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = 'https://dhavalrupapara.me';
 const NEW_YORK_COORDINATES = { lat: 40.7128, lng: -74.0060 };
 
 const TrackingComponent = () => {
@@ -13,69 +13,79 @@ const TrackingComponent = () => {
   const [markers, setMarkers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
   const mapRef = useRef(null);
-
- const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null);
 
 // Replace the socket initialization useEffect with this:
 useEffect(() => {
+  // Clear any existing socket connection
+  if (socketRef.current) {
+    socketRef.current.removeAllListeners();
+    socketRef.current.close();
+  }
+
   try {
-    const newSocket = io(BACKEND_URL, {
-      query: { token: localStorage.getItem('token')}
-      // transports: ['websocket'], // Force WebSocket transport
-      // reconnection: true,        // Enable reconnection
-      // reconnectionAttempts: 5,   // Try to reconnect 5 times
-      // reconnectionDelay: 1000,   // Wait 1 second between attempts
-      // timeout: 10000            // Connection timeout in ms
+    // Configure socket with proper options
+    socketRef.current = io('https://dhavalrupapara.me', {
+      path: '/socket.io',
+      transports: ['websocket', 'polling'],
+      auth: { token: localStorage.getItem('token') }
     });
-
-    newSocket.on('connect', () => {
+     // Connection event handlers
+     socketRef.current.on('connect', () => {
       console.log('Socket connected successfully');
+      setSocketConnected(true);
       setError(null);
-    });
-
-    newSocket.on('connect_error', (err) => {
-      console.error('Socket connection error:', err);
-      setError('Connection error. Please check your network.');
-    });
-
-    newSocket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
-      if (reason === 'io server disconnect') {
-        // Server disconnected the socket, try to reconnect
-        newSocket.connect();
-      }
-    });
-
-    newSocket.on('reconnect', (attemptNumber) => {
-      console.log('Socket reconnected after', attemptNumber, 'attempts');
+      
       // Resubscribe to booking updates if we were tracking one
       if (rideDetails?._id) {
-        newSocket.emit('subscribe', rideDetails._id);
+        socketRef.current.emit('subscribe', rideDetails._id);
       }
     });
 
-    newSocket.on('locationUpdate', (location) => {
-      console.log('Received location update:', location);
-      setCurrentLocation(location);
-      updateMarkerPosition('current', location);
+    socketRef.current.on('connect_error', (err) => {
+      console.error('Socket connection error:', err);
+      setSocketConnected(false);
+      setError(`Connection error: ${err.message}. Please check if the server is running.`);
     });
 
-    setSocket(newSocket);
+    socketRef.current.on('error', (err) => {
+      console.error('Socket error:', err);
+      setError(`Socket error: ${err.message}`);
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      setSocketConnected(false);
+      if (reason === 'io server disconnect') {
+        // Server initiated disconnect, try to reconnect
+        socketRef.current.connect();
+      }
+    });
+
+    socketRef.current.on('locationUpdate', (location) => {
+      console.log('Received location update:', location);
+      if (location && location.lat && location.lng) {
+        setCurrentLocation(location);
+        updateMarkerPosition('current', location);
+      }
+    });
 
     // Cleanup function
     return () => {
-      if (newSocket) {
-        newSocket.removeAllListeners();
-        newSocket.close();
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.close();
+        socketRef.current = null;
       }
     };
   } catch (error) {
     console.error('Socket initialization error:', error);
-    setError('Failed to initialize connection');
+    setError('Failed to initialize socket connection');
+    setSocketConnected(false);
   }
 }, []); // Empty dependency array to run only once on mount
-
 
 
   
@@ -115,121 +125,100 @@ useEffect(() => {
     setMap(mapInstance);
   };
 
- const updateMap = (booking) => {
-  if (!map) return;
-
-  const bounds = new window.google.maps.LatLngBounds();
+  const updateMap = (booking) => {
+    if (!map) return;
   
-  // Clear existing markers
-  Object.values(markers).forEach(marker => marker.setMap(null));
-  setMarkers({});
-
-  // Add pickup marker (Origin - A marker)
-  const pickupMarker = new window.google.maps.Marker({
-    position: booking.pickup.coordinates,
-    map: map,
-    label: {
-      text: 'A',
-      color: 'white',
-      fontSize: '14px',
-      fontWeight: 'bold'
-    },
-    icon: {
-      path: window.google.maps.SymbolPath.CIRCLE,
-      fillColor: '#EA4335', // Google Maps red
-      fillOpacity: 1,
-      strokeColor: '#FFFFFF',
-      strokeWeight: 2,
-      scale: 8
-    }
-  });
-  bounds.extend(booking.pickup.coordinates);
-
-  // Add dropoff marker (Destination - B marker)
-  const dropoffMarker = new window.google.maps.Marker({
-    position: booking.dropoff.coordinates,
-    map: map,
-    label: {
-      text: 'B',
-      color: 'white',
-      fontSize: '14px',
-      fontWeight: 'bold'
-    },
-    icon: {
-      path: window.google.maps.SymbolPath.CIRCLE,
-      fillColor: '#EA4335', // Google Maps red
-      fillOpacity: 1,
-      strokeColor: '#FFFFFF',
-      strokeWeight: 2,
-      scale: 8
-    }
-  });
-  bounds.extend(booking.dropoff.coordinates);
-
-  // Create route path with better styling
-  const routePath = new window.google.maps.Polyline({
-    path: [booking.pickup.coordinates, booking.dropoff.coordinates],
-    geodesic: true,
-    strokeColor: '#4285F4', // Google Maps blue
-    strokeOpacity: 1,
-    strokeWeight: 3,
-    icons: [{
-      icon: {
-        path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        scale: 3,
-        strokeColor: '#4285F4',
-        strokeOpacity: 1,
-      },
-      repeat: '100px'
-    }]
-  });
-  routePath.setMap(map);
-
-  map.fitBounds(bounds, { padding: 60 });
-
-  setMarkers({
-    pickup: pickupMarker,
-    dropoff: dropoffMarker,
-    route: routePath
-  });
-};
-
-const updateMarkerPosition = (markerType, position) => {
-  if (!map) return;
-
-  if (markers[markerType]) {
-    markers[markerType].setPosition(position);
-  } else {
-    // Custom SVG marker for driver
-    const driverIcon = {
-      url: `data:image/svg+xml;utf-8,${encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#FBBC04">
-          <path d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-        </svg>
-      `)}`,
-      scaledSize: new window.google.maps.Size(32, 32),
-      anchor: new window.google.maps.Point(16, 32),
-      labelOrigin: new window.google.maps.Point(16, 10)
-    };
-
-    const newMarker = new window.google.maps.Marker({
-      position: position,
+    const bounds = new window.google.maps.LatLngBounds();
+    
+    // Clear existing markers
+    Object.values(markers).forEach(marker => marker.setMap(null));
+    setMarkers({});
+  
+    // Add pickup marker (Red pin like Google Maps)
+    const pickupMarker = new window.google.maps.Marker({
+      position: booking.pickup.coordinates,
       map: map,
-      icon: driverIcon,
-      label: {
-        text: '🚗',
-        fontSize: '20px'
+      icon: {
+        url: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+        scaledSize: new window.google.maps.Size(27, 43),
+        origin: new window.google.maps.Point(0, 0),
+        anchor: new window.google.maps.Point(13, 42)
       },
-      animation: window.google.maps.Animation.DROP,
-      title: 'Driver Location'
+      title: 'Pickup Location'
     });
-
-    setMarkers(prev => ({ ...prev, [markerType]: newMarker }));
-  }
-};
+    bounds.extend(booking.pickup.coordinates);
+  
+    // Add dropoff marker (Red pin like Google Maps)
+    const dropoffMarker = new window.google.maps.Marker({
+      position: booking.dropoff.coordinates,
+      map: map,
+      icon: {
+        url: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+        scaledSize: new window.google.maps.Size(27, 43),
+        origin: new window.google.maps.Point(0, 0),
+        anchor: new window.google.maps.Point(13, 42)
+      },
+      title: 'Dropoff Location'
+    });
+    bounds.extend(booking.dropoff.coordinates);
+  
+    // Create route path with Google Maps style
+    const routePath = new window.google.maps.Polyline({
+      path: [booking.pickup.coordinates, booking.dropoff.coordinates],
+      geodesic: true,
+      strokeColor: '#DE3618', // Google Maps route red
+      strokeOpacity: 1.0,
+      strokeWeight: 4
+    });
+    routePath.setMap(map);
+  
+    map.fitBounds(bounds, { padding: { top: 50, right: 50, bottom: 50, left: 50 } });
+  
+    setMarkers({
+      pickup: pickupMarker,
+      dropoff: dropoffMarker,
+      route: routePath
+    });
+  };
+  
+  const updateMarkerPosition = (markerType, position) => {
+    if (!map) return;
+  
+    if (markers[markerType]) {
+      markers[markerType].setPosition(position);
+    } else {
+      // Custom car marker for driver
+      const driverIcon = {
+        path: 'M 12,2 C 8.134,2 5,5.134 5,9 c 0,5.25 7,13 7,13 0,0 7,-7.75 7,-13 0,-3.866 -3.134,-7 -7,-7 z',
+        fillColor: '#4285F4', // Google blue
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 2,
+        scale: 2,
+        anchor: new window.google.maps.Point(12, 22),
+        labelOrigin: new window.google.maps.Point(12, 10)
+      };
+  
+      const newMarker = new window.google.maps.Marker({
+        position: position,
+        map: map,
+        icon: driverIcon,
+        label: {
+          text: 'D',
+          fontSize: '16px',
+          className: 'driver-label'
+        },
+        animation: window.google.maps.Animation.DROP,
+        title: 'Driver Location',
+        zIndex: 1000 // Ensure driver marker stays on top
+      });
+  
+      setMarkers(prev => ({ ...prev, [markerType]: newMarker }));
+    }
+  };
 
  // Update the fetchRideDetails function:
-const fetchRideDetails = async () => {
+ const fetchRideDetails = async () => {
   if (!bookingId.trim()) {
     setError('Please enter a booking ID');
     return;
@@ -241,8 +230,10 @@ const fetchRideDetails = async () => {
   try {
     const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include' // Important if your server requires credentials
     });
 
     if (!response.ok) {
@@ -252,13 +243,13 @@ const fetchRideDetails = async () => {
     const data = await response.json();
     setRideDetails(data.booking);
     
-    // Ensure socket is connected before subscribing
-    if (socket && socket.connected) {
+    // Subscribe to updates using the socket reference
+    if (socketRef.current && socketConnected) {
       console.log('Subscribing to booking updates:', bookingId);
-      socket.emit('subscribe', bookingId);
+      socketRef.current.emit('subscribe', bookingId);
     } else {
       console.warn('Socket not connected, unable to subscribe to updates');
-      setError('Connection issue: Real-time updates may be unavailable');
+      setError('Warning: Real-time updates may be unavailable');
     }
 
     updateMap(data.booking);
@@ -342,6 +333,7 @@ const fetchRideDetails = async () => {
               </div>
             )}
           </div>
+         
 
           {/* Ride Details */}
           {rideDetails && (

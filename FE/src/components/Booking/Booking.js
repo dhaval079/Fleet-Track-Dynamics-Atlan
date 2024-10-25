@@ -108,6 +108,17 @@ const BookingComponent = () => {
     });
   };
 
+
+  const showError = (message) => {
+    if(message == "Invalid vehicle or vehicle does not belong to the driver"){
+      setError(message);
+      alert("Select a different driver or vehicle, the selected vehicle does not belong to the driver")
+    }else{
+      setError(message);
+      alert(message); 
+    }
+  };
+
   const initializeSocket = () => {
     const newSocket = io('https://dhavalrupapara.me', {
       query: { token: localStorage.getItem('token') }
@@ -274,23 +285,58 @@ const BookingComponent = () => {
     const origin = originInputRef.current.value;
     const destination = destinationInputRef.current.value;
 
-    if (!origin || !destination || !selectedVehicle || (!selectedDriver && selectionMode === 'manual') || (!matchedDriver && selectionMode === 'automated')) {
-      setError("Please fill in all required fields");
+    // Validation checks
+    if (!origin || !destination) {
+      showError("Please enter both pickup and drop-off locations");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!selectedVehicle) {
+      showError("Please select a vehicle");
+      setIsLoading(false);
+      return;
+    }
+
+    if (selectionMode === 'manual' && !selectedDriver) {
+      showError("Please select a driver");
+      setIsLoading(false);
+      return;
+    }
+
+    if (selectionMode === 'automated' && !matchedDriver) {
+      showError("Please find a matching driver first");
       setIsLoading(false);
       return;
     }
 
     if (!originInputRef.current.coordinates || !destinationInputRef.current.coordinates) {
-      setError("Please select valid locations for both origin and destination");
+      showError("Please select valid locations from the dropdown suggestions");
       setIsLoading(false);
       return;
     }
 
     const finalPrice = parseFloat(userPrice);
     if (isNaN(finalPrice) || finalPrice < parseFloat(estimatedPrice)) {
-      setError("Please enter a valid price (must be >= estimated price).");
+      showError("Please enter a valid price (must be greater than or equal to the estimated price)");
       setIsLoading(false);
       return;
+    }
+
+    // Schedule validation
+    if (isScheduleFuture) {
+      if (!scheduleDate || !scheduleTime) {
+        showError("Please select both date and time for future booking");
+        setIsLoading(false);
+        return;
+      }
+
+      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+      if (scheduledDateTime <= new Date()) {
+        showError("Scheduled time must be in the future");
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -310,11 +356,6 @@ const BookingComponent = () => {
       };
 
       if (isScheduleFuture) {
-        if (!scheduleDate || !scheduleTime) {
-          setError("Please select both date and time for future booking.");
-          setIsLoading(false);
-          return;
-        }
         const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
         bookingData.scheduledTime = scheduledDateTime.toISOString();
       }
@@ -327,24 +368,31 @@ const BookingComponent = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        // 
         body: JSON.stringify(bookingData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Booking failed');
+        throw new Error(data.message || 'Booking failed');
       }
 
-      const data = await response.json();
       if (data.success) {
+        // Clear any existing errors
+        setError(null);
+        // Show success message
         alert(`Ride ${isScheduleFuture ? 'scheduled' : 'booked'} successfully! Booking ID: ${data.booking._id}`);
         setBookingId(data.booking._id);
+
+        // Optional: Clear form or redirect user
+        // clearForm(); // You could add this function to reset the form
       } else {
         throw new Error(data.message || 'Booking failed');
       }
     } catch (error) {
-      setError(`Failed to ${isScheduleFuture ? 'schedule' : 'book'} ride: ${error.message}`);
+      const errorMessage = error.message || `Failed to ${isScheduleFuture ? 'schedule' : 'book'} ride`;
+      showError(errorMessage);
+      console.error('Booking error:', error);
     } finally {
       setIsLoading(false);
     }

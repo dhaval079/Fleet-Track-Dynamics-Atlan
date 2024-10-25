@@ -45,11 +45,12 @@ exports.createVehicle = async (req, res) => {
     try {
       const { driverId, make, model, year, licensePlate, vehicleType, capacity, color } = req.body;
   
-      // Check if driver exists and is actually a driver
-      const driver = await User.findOne({ _id: driverId, role: 'driver' });
-      if (!driver) {
-        return res.status(400).json({ success: false, message: 'Invalid driver' });
-      }
+    // Check if driver exists and is actually a driver
+    const driver = await User.findOne({ _id: driverId });
+    if (!driver) {
+      console.log('Driver not found or not a driver:', driverId);
+      return res.status(400).json({ success: false, message: 'Invalid driver' });
+    }
   
       const vehicle = new Vehicle({
         driver: driverId,
