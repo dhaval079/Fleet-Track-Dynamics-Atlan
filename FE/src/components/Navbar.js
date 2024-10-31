@@ -1,163 +1,111 @@
-import React, { useState, useCallback, memo } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import { Menu, X, ChevronDown, Car } from 'lucide-react';
-
-const NavLink = memo(({ to, children, onClick }) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-  return (
-    <Link
-      to={to}
-      className={`block py-2 px-4 ${
-        isActive
-          ? 'bg-blue-700 text-white'
-          : 'text-blue-200 hover:bg-blue-700 hover:text-white'
-      } rounded transition duration-300`}
-      onClick={onClick}
-    >
-      {children}
-    </Link>
-  );
-});
-
-NavLink.displayName = 'NavLink';
+import React, { useState } from 'react';
+import { Search, Home, Calendar, User, MapPin, LogOut } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState('home');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [notifications] = useState(3);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await logout();
-      window.location.reload();
-      window.location.href = '/login';
-
-      // navigate('/login', { replace: true });
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  }, [logout]);
-
-  const toggleMenu = useCallback(() => {
-    setIsOpen(prev => !prev);
-  }, []);
-
-  const toggleDropdown = useCallback(() => {
-    setDropdownOpen(prev => !prev);
-  }, []);
-
-  const closeMenus = useCallback(() => {
-    setIsOpen(false);
-    setDropdownOpen(false);
-  }, []);
-
-  // Verify user and token exist before rendering
-  const token = localStorage.getItem('token');
-  if (!user || !token) return null;
+  // Navigation items configuration
+  const navItems = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'book', label: 'Book a Ride', icon: Calendar },
+    { id: 'rides', label: 'My Rides', icon: MapPin, notifications: notifications },
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'track', label: 'Track Ride', icon: MapPin, hasLiveIndicator: true }
+  ];
 
   return (
-    <nav className="bg-blue-600 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="text-white text-2xl font-bold">
-            LogistiQ
-            </Link>
+    <nav className="relative h-20 bg-gradient-to-r from-slate-900 to-slate-800 shadow-lg">
+      {/* Frosted glass effect overlay */}
+      <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-sm" />
+
+      <div className="relative h-full max-w-7xl mx-auto px-4 flex items-center justify-between">
+        {/* Logo Section */}
+        <div className="flex items-center space-x-2 group">
+          <div className="relative">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg transform transition-all duration-300 group-hover:rotate-12 group-hover:scale-110">
+              <div className="absolute inset-0 bg-blue-500 rounded-lg transform rotate-3 group-hover:rotate-6 transition-transform" />
+              <span className="absolute inset-0 flex items-center justify-center text-white font-bold">L</span>
+            </div>
           </div>
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <NavLink to="/" onClick={closeMenus}>Home</NavLink>
-              {user.role === 'customer' && (
-                <>
-                  <NavLink to="/book" onClick={closeMenus}>Book a Ride</NavLink>
-                  <NavLink to="/rides" onClick={closeMenus}>My Rides</NavLink>
-                </>
-              )}
-              {user.role === 'driver' && (
-                <div className="relative group">
-                  <button
-                    className="text-blue-200 hover:bg-blue-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                    onClick={toggleDropdown}
-                  >
-                    Driver <ChevronDown className="ml-1 h-4 w-4" />
-                  </button>
-                  {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
-                      <NavLink to="/driver/dashboard" onClick={closeMenus}>Dashboard</NavLink>
-                      <NavLink to="/driver/update-location" onClick={closeMenus}>Update Location</NavLink>
-                      <NavLink to="/driver/vehicles" onClick={closeMenus}>Vehicle Management</NavLink>
-                    </div>
-                  )}
+          <div className="flex flex-col">
+            <span className="text-white font-bold text-xl tracking-tight">LogistiQ</span>
+            <span className="text-slate-400 text-xs font-medium">ENTERPRISE</span>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <div className="flex items-center space-x-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveItem(item.id)}
+              className={`relative group px-4 py-2 rounded-full transition-all duration-300 ${
+                activeItem === item.id
+                  ? 'bg-blue-600/20 text-white'
+                  : 'hover:bg-white/5 text-slate-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <item.icon 
+                  className={`w-4 h-4 transition-all duration-300 ${
+                    activeItem === item.id ? 'text-blue-400' : 'text-slate-400'
+                  } group-hover:text-blue-400`} 
+                />
+                <span className="font-medium">{item.label}</span>
+              </div>
+
+              {/* Active indicator line */}
+              <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-500 transition-all duration-300 ${
+                activeItem === item.id ? 'w-4/5' : 'group-hover:w-1/2'
+              }`} />
+
+              {/* Notification badge */}
+              {item.notifications && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">{item.notifications}</span>
                 </div>
               )}
-              {user.role === 'admin' && (
-                <NavLink to="/admin" onClick={closeMenus}>Admin Dashboard</NavLink>
+
+              {/* Live indicator */}
+              {item.hasLiveIndicator && (
+                <div className="absolute top-1/2 -translate-y-1/2 right-2">
+                  <div className="relative w-2 h-2">
+                    <div className="absolute inset-0 bg-green-500 rounded-full animate-ping" />
+                    <div className="relative w-2 h-2 bg-green-500 rounded-full" />
+                  </div>
+                </div>
               )}
-              <NavLink to="/profile" onClick={closeMenus}>Profile</NavLink>
-              <NavLink to="/tracking" onClick={closeMenus}>Track Ride</NavLink>
-            </div>
-          </div>
-          <div className="hidden md:block">
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-            >
-              Logout
             </button>
+          ))}
+        </div>
+
+        {/* Right Section: Search & Logout */}
+        <div className="flex items-center space-x-4">
+          {/* Search Bar */}
+          <div className={`relative transition-all duration-300 ${
+            isSearchFocused ? 'w-64' : 'w-48'
+          }`}>
+            <input
+              type="text"
+              placeholder="Search rides..."
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              className="w-full bg-white/5 rounded-full py-2 pl-10 pr-4 text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           </div>
-          <div className="-mr-2 flex md:hidden">
-            <button
-              onClick={toggleMenu}
-              className="bg-blue-700 inline-flex items-center justify-center p-2 rounded-md text-white hover:text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
-            </button>
-          </div>
+
+          {/* Logout Button */}
+          <button className="relative group p-2 rounded-full bg-red-500/10 hover:bg-red-500/20 transition-all duration-300">
+            <LogOut className="w-5 h-5 text-red-500 transition-all duration-300 group-hover:rotate-12" />
+            <div className="absolute inset-0 bg-red-500/10 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300" />
+          </button>
         </div>
       </div>
-      {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <NavLink to="/" onClick={closeMenus}>Home</NavLink>
-            {user.role === 'customer' && (
-              <>
-                <NavLink to="/book" onClick={closeMenus}>Book a Ride</NavLink>
-                <NavLink to="/rides" onClick={closeMenus}>My Rides</NavLink>
-              </>
-            )}
-            {user.role === 'driver' && (
-              <>
-                <NavLink to="/driver/dashboard" onClick={closeMenus}>Driver Dashboard</NavLink>
-                <NavLink to="/driver/update-location" onClick={closeMenus}>Update Location</NavLink>
-                <NavLink to="/driver/vehicles" onClick={closeMenus}>Vehicle Management</NavLink>
-              </>
-            )}
-            {user.role === 'admin' && (
-              <NavLink to="/admin" onClick={closeMenus}>Admin Dashboard</NavLink>
-            )}
-            <NavLink to="/profile" onClick={closeMenus}>Profile</NavLink>
-            <NavLink to="/tracking" onClick={closeMenus}>Track Ride</NavLink>
-          </div>
-          <div className="pt-4 pb-3 border-t border-blue-700">
-            <div className="px-2">
-              <button
-                onClick={handleLogout}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
 
-Navbar.displayName = 'Navbar';
-
-export default memo(Navbar);
+export default Navbar;
