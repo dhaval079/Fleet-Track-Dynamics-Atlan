@@ -427,12 +427,10 @@ const BookingComponent = () => {
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
               <Car className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">RideStream</h1>
+            <h1 className="text-xl font-bold text-gray-900">Book a Ride</h1>
           </div>
 
           <div className="p-6 flex-1 overflow-y-auto space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Book a Ride</h2>
-
             {/* Location Inputs */}
             <div className="space-y-4">
               <div className="relative">

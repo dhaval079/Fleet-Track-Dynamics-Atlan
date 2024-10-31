@@ -64,7 +64,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="text-white text-2xl font-bold">
-              RideStream
+            <Car className="w-6 h-6 text-white" />
+            
             </Link>
           </div>
           <div className="hidden md:block">

@@ -212,7 +212,7 @@ const Auth = () => {
         <div className="max-w-6xl w-full space-y-8 animate-slide-up">
           {/* Header */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold text-white">Fleet Track Dynamics</h1>
+            <h1 className="text-4xl font-bold text-white">LogistiQ</h1>
             <p className="text-slate-300 animate-fade-in">Choose your account type to get started</p>
           </div>
 
@@ -431,7 +431,7 @@ const Auth = () => {
           <div className="text-center text-slate-400 relative">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-shimmer"></div>
             <p className="relative">
-              Secure login powered by Fleet Track Dynamics
+              Secure login powered by LogistiQ
             </p>
           </div>
         </div>
