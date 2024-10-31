@@ -424,9 +424,6 @@ const BookingComponent = () => {
         <div className="w-[450px] h-full bg-white shadow-lg z-10 flex flex-col">
           {/* Header */}
           <div className="flex items-center space-x-3 p-6 border-b">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-              <Car className="w-6 h-6 text-white" />
-            </div>
             <h1 className="text-xl font-bold text-gray-900">Book a Ride</h1>
           </div>
 

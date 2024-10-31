@@ -64,7 +64,6 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="text-white text-2xl font-bold">
-            <Car className="w-6 h-6 text-white" />
             LogistiQ
             </Link>
           </div>

@@ -197,7 +197,7 @@ const Home = () => {
       {/* CTA Section */}
       <section className="bg-blue-600 py-20 px-4 md:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-8 text-white">Ready to Transform Your Ride Experience?</h2>
+          <h2 className="text-4xl font-bold mb-8 text-white">Ready to Transform Your Ride Experience with LogistiQ?</h2>
           <p className="text-xl mb-8 text-blue-100">
             Join thousands of satisfied users who have made the switch to our innovative ride-sharing platform.
           </p>
