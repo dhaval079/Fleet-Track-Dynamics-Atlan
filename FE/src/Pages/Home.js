@@ -33,7 +33,7 @@ const Home = () => {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center bg-blue-600">
+      <section className="relative min-h-screen flex items-center justify-center bg-blue-800">
         <div className="absolute inset-0 z-0">
           <img src='/truck1.jpeg' alt="Ride sharing concept" className="w-full h-full object-cover opacity-30" />
         </div>
