@@ -1,7 +1,7 @@
 import React, { useState, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, Car } from 'lucide-react';
 
 const NavLink = memo(({ to, children, onClick }) => {
   const location = useLocation();
@@ -65,7 +65,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="text-white text-2xl font-bold">
             <Car className="w-6 h-6 text-white" />
-            
+            LogistiQ
             </Link>
           </div>
           <div className="hidden md:block">
