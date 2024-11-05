@@ -12,9 +12,10 @@ const vehicleRouter = require('./routes/vehicleRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const { authentication } = require('./middleware/authMiddleware');
 const loggingMiddleware = require('./middleware/loggingMiddleware');
 const schedulerService = require('./services/schedulerService');
-const { authentication } = require('./middleware/authMiddleware');
+
 
 require('dotenv').config();
 
@@ -29,7 +30,7 @@ const server = http.createServer(app); // Create HTTP server first
 // Setup Socket.IO with CORS configuration
 const io = setupWebSocket(server, {
   cors: {
-    origin: "https://fleet-track-dynamics-atlan.vercel.app",
+    origin: "https://logistiq-atlan.vercel.app",
     methods: ["GET", "POST"],
     allowedHeaders: ["Authorization"],
     credentials: true
