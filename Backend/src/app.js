@@ -19,24 +19,22 @@ const schedulerService = require('./services/schedulerService');
 
 require('dotenv').config();
 
-// Log environment variables
-console.log('REDIS_URL:', process.env.REDIS_URL);
-console.log('MONGO_URL:', process.env.MONGO_URL);
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+// Load environment variables first
+dotenv.config();
 
+// Create Express app
 const app = express();
-const server = http.createServer(app); // Create HTTP server first
 
 // Setup Socket.IO with CORS configuration
-const io = setupWebSocket(server, {
-  cors: {
-    origin: "https://logistiq-atlan.vercel.app",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Authorization"],
-    credentials: true
-  },
-  path: '/socket.io' // Explicitly set the path
-});
+// const io = setupWebSocket(server, {
+//   cors: {
+//     origin: "https://logistiq-atlan.vercel.app",
+//     methods: ["GET", "POST"],
+//     allowedHeaders: ["Authorization"],
+//     credentials: true
+//   },
+//   path: '/socket.io' // Explicitly set the path
+// });
 
 // Initialize scheduler
 schedulerService.init();
@@ -44,27 +42,83 @@ schedulerService.init();
 // Middleware setup
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: 'https://logistiq-atlan.vercel.app',
+// app.use(cors({
+//   origin: 'https://logistiq-atlan.vercel.app',
+  
+const corsOptions = {
+  origin: ['https://logistiq-atlan.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
 
+// Apply CORS before other middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
 app.use(loggingMiddleware);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+// Create HTTP server
+const server = http.createServer(app);
+
+// Setup Socket.IO with CORS configuration
+const io = setupWebSocket(server, {
+  cors: corsOptions,
+  path: '/socket.io',
+  transports: ['websocket', 'polling']
 });
 
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} request for '${req.url}'`);
-  next();
+// MongoDB connection with retry logic
+const connectMongoDB = async (retries = 5) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await mongoose.connect(process.env.MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+      });
+      console.log("MongoDB Database connected Successfully!");
+      return;
+    } catch (err) {
+      console.log(`Failed to connect to MongoDB (attempt ${i + 1}/${retries}):`, err);
+      if (i === retries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds before retrying
+    }
+  }
+};
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message || 'Internal Server Error',
+      status: err.status || 500
+    }
+  });
 });
 
-// API routes
+// Health check with detailed status
+app.get('/health', async (req, res) => {
+  try {
+    const mongoStatus = mongoose.connection.readyState === 1;
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      services: {
+        mongodb: mongoStatus ? 'connected' : 'disconnected',
+        server: 'running'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'ERROR',
+      error: error.message
+    });
+  }
+});
+
+// Routes setup
 app.use("/api/v2/auth", authRouter);
 app.use("/api/v2/users", userRouter);
 app.use("/api/v2/drivers", driverRouter);
@@ -72,46 +126,36 @@ app.use("/api/v2/vehicles", vehicleRouter);
 app.use("/api/v2/bookings", bookingRouter);
 app.use("/api/v2/admin", adminRouter);
 
-// Error handling
-app.use(errorHandler);
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
-// Home route
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>Server has started and API is Working</h1>
-    <p>Refer to the Postman Docs here: <a href="https://documenter.getpostman.com/view/37397155/2sA3rwLDt1">Postman Documentation</a></p>
-  `);
-});
-
-// MongoDB connection
-const mongoDB = async () => {
-  try {
-    await mongoose.connect("mongodb+srv://dhaval079:eren679999@cluster0.rm7on6v.mongodb.net/Atlan-Transport");
-    console.log("MongoDB Database connected Successfully!");
-  } catch (err) {
-    console.log("Failed to connect to MongoDB:", err);
-    throw err;
-  }
-};
-
-// Server initialization
+// Server initialization with better error handling
 const PORT = process.env.PORT || 3001;
 
-// IMPORTANT: Use 'server.listen' instead of 'app.listen'
-server.listen(PORT, '0.0.0.0', async () => {
+const startServer = async () => {
   try {
-    await mongoDB();
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`Socket.IO is initialized with path: ${io.path()}`);
+    await connectMongoDB();
+    
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`Socket.IO is initialized with path: ${io.path()}`);
+    });
+
+    // Handle server errors
+    server.on('error', (error) => {
+      console.error('Server error:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.log(`Port ${PORT} is busy, retrying...`);
+        setTimeout(() => {
+          server.close();
+          server.listen(PORT, '0.0.0.0');
+        }, 1000);
+      }
+    });
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
-});
+};
 
-// Export for testing
+startServer();
+
 module.exports = { app, server, io };
