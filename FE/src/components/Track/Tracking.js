@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
 const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF';
-const BACKEND_URL = 'https://dhavalrupapara.me';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app';
 const NEW_YORK_COORDINATES = { lat: 40.7128, lng: -74.0060 };
 
 const TrackingComponent = () => {
@@ -27,7 +27,7 @@ useEffect(() => {
 
   try {
     // Configure socket with proper options
-    socketRef.current = io('https://dhavalrupapara.me', {
+    socketRef.current = io('https://fleet-track-dynamics-atlan-production.up.railway.app', {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
       auth: { token: localStorage.getItem('token') }

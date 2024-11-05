@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const statusOptions = ['all', 'pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled', 'scheduled'];
-const BACKEND_URL = 'https://dhavalrupapara.me';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app';
 
 
 const getStatusColor = (status) => {

@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { MapPin, Car, Clock, Users, ChevronDown, Search, Crosshair, ZoomIn, ZoomOut, Calendar } from 'lucide-react';
 
 const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
-const BACKEND_URL = 'https://dhavalrupapara.me';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app';
 
 
 const BookingComponent = () => {
@@ -120,7 +120,7 @@ const BookingComponent = () => {
   };
 
   const initializeSocket = () => {
-    const newSocket = io('https://dhavalrupapara.me', {
+    const newSocket = io('https://fleet-track-dynamics-atlan-production.up.railway.app', {
       query: { token: localStorage.getItem('token') }
       // withCredentials: true
     });
