@@ -1,7 +1,7 @@
 // utils/api.js
 
-// export const API_BASE_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app';
-export const API_BASE_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app/';
+// export const API_BASE_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+export const API_BASE_URL = 'https://fleet-track-dynamics-atlan.onrender.com/';
 
 export const apiCall = async (endpoint, method = 'GET', body = null) => {
   try {

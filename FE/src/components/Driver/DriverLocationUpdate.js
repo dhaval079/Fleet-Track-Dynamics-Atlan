@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with your actual API key
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app';
+const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
 const driverId = localStorage.getItem('userId');
 
 const DriverLocationUpdate = () => {
