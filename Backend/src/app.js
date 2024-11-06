@@ -28,7 +28,7 @@ const app = express();
 // Setup Socket.IO with CORS configuration
 // const io = setupWebSocket(server, {
 //   cors: {
-//     origin: "https://logistiq-atlan.vercel.app",
+//     origin: "https://LogistiQ-atlan.vercel.app",
 //     methods: ["GET", "POST"],
 //     allowedHeaders: ["Authorization"],
 //     credentials: true
@@ -43,10 +43,10 @@ schedulerService.init();
 app.use(express.json());
 app.use(cookieParser());
 // app.use(cors({
-//   origin: 'https://logistiq-atlan.vercel.app',
+//   origin: 'https://LogistiQ-atlan.vercel.app',
   
 const corsOptions = {
-  origin: ['https://logistiq-atlan.vercel.app'],
+  origin: ['https://logistiq-fleet.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
