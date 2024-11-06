@@ -41,9 +41,9 @@ const AppLayout = () => {
       <main className="flex-grow container mx-auto">
         <AppRoutes />
       </main>
-      <footer className="bg-gray-200 text-center py-4">
+      {/* <footer className="bg-grey text-center py-4">
         © 2024 Ride Sharing App. All rights reserved.
-      </footer>
+      </footer> */}
     </div>
   );
 };
