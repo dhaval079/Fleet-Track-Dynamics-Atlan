@@ -29,7 +29,7 @@
 
 const fetch = require('node-fetch'); // Make sure to install node-fetch if not already installed
 
-const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
+const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with your actual API key
 
 export const geocodeAddress1 = async (address) => {
   const encodedAddress = encodeURIComponent(address);

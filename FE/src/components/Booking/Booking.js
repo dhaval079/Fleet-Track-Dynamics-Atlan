@@ -7,7 +7,7 @@ import { apiCall } from '../../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { MapPin, Car, Clock, Users, ChevronDown, Search, Crosshair, ZoomIn, ZoomOut, Calendar } from 'lucide-react';
 
-const API_KEY = 'AlzaSyXa6xL9GDqbdy0Ks2avv6N-eaz0OgR1krF'; // Replace with your actual API key
+const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with your actual API key
 const BACKEND_URL = 'https://fleet-track-dynamics-atlan-production.up.railway.app';
 
 
