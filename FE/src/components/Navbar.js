@@ -2,11 +2,14 @@ import React, { useState, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Menu, X, ChevronDown, Home, Calendar, User, MapPin, LogOut, Search, Settings } from 'lucide-react';
+import { useSearch } from './context/SearchContext';
 
 const NavLink = memo(({ to, children, onClick, icon: Icon }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
-  
+ 
+
+
   return (
     <Link
       to={to}
@@ -39,9 +42,23 @@ NavLink.displayName = 'NavLink';
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Add this line
+  const { setSearchQuery } = useSearch();
+
+  const [searchInput, setSearchInput] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const handleSearch = useCallback((e) => {
+    const query = e.target.value;
+    setSearchInput(query);
+    setSearchQuery(query.toLowerCase());
+    if (location.pathname !== '/rides') {
+      navigate('/rides');
+    }
+  }, [setSearchQuery, navigate, location.pathname]); // Add location.pathname to dependencies
+
 
   const handleLogout = useCallback(async () => {
     try {
@@ -128,7 +145,7 @@ const Navbar = () => {
           
           <NavLink to="/profile" icon={User} onClick={closeMenus}>Profile</NavLink>
           <NavLink to="/tracking" icon={MapPin} onClick={closeMenus}>
-            Track Ride
+            Track Ride &nbsp;
             <div className="absolute top-1/2 -translate-y-1/2 right-2">
               <div className="relative w-2 h-2">
                 <div className="absolute inset-0 bg-green-500 rounded-full animate-ping" />
@@ -140,18 +157,31 @@ const Navbar = () => {
 
         {/* Right Section: Search & Logout */}
         <div className="hidden md:flex items-center space-x-4">
-          <div className={`relative transition-all duration-300 ${
-            isSearchFocused ? 'w-64' : 'w-48'
-          }`}>
-            <input
-              type="text"
-              placeholder="Search rides..."
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              className="w-full bg-white/5 rounded-full py-2 pl-10 pr-4 text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          </div>
+        <div className={`relative transition-all duration-300 ${
+    isSearchFocused ? 'w-64' : 'w-48'
+  }`}>
+    <input
+      type="text"
+      value={searchInput}
+      onChange={handleSearch}
+      placeholder="Search by origin or destination..."
+      onFocus={() => setIsSearchFocused(true)}
+      onBlur={() => setIsSearchFocused(false)}
+      className="w-full bg-white/5 rounded-full py-2 pl-10 pr-4 text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
+    />
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+    {searchInput && (
+      <button
+        onClick={() => {
+          setSearchInput('');
+          setSearchQuery('');
+        }}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    )}
+  </div>
 
           <button
             onClick={handleLogout}

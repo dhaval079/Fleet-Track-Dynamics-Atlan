@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
 const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu';
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND;
 const NEW_YORK_COORDINATES = { lat: 40.7128, lng: -74.0060 };
 
 const TrackingComponent = () => {
@@ -27,7 +27,7 @@ useEffect(() => {
 
   try {
     // Configure socket with proper options
-    socketRef.current = io('https://fleet-track-dynamics-atlan.onrender.com', {
+    socketRef.current = io('http://localhost:3001', {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
       auth: { token: localStorage.getItem('token') }
@@ -36,7 +36,7 @@ useEffect(() => {
      socketRef.current.on('connect', () => {
       console.log('Socket connected successfully');
       setSocketConnected(true);
-      setError(null);
+      //setError(null);
       
       // Resubscribe to booking updates if we were tracking one
       if (rideDetails?._id) {
@@ -47,12 +47,12 @@ useEffect(() => {
     socketRef.current.on('connect_error', (err) => {
       console.error('Socket connection error:', err);
       setSocketConnected(false);
-      setError(`Connection error: ${err.message}. Please check if the server is running.`);
+      //setError(`Connection error: ${err.message}. Please check if the server is running.`);
     });
 
     socketRef.current.on('error', (err) => {
       console.error('Socket error:', err);
-      setError(`Socket error: ${err.message}`);
+      //setError(`Socket error: ${err.message}`);
     });
 
     socketRef.current.on('disconnect', (reason) => {
@@ -82,7 +82,7 @@ useEffect(() => {
     };
   } catch (error) {
     console.error('Socket initialization error:', error);
-    setError('Failed to initialize socket connection');
+    //setError('Failed to initialize socket connection');
     setSocketConnected(false);
   }
 }, []); // Empty dependency array to run only once on mount
@@ -220,12 +220,12 @@ useEffect(() => {
  // Update the fetchRideDetails function:
  const fetchRideDetails = async () => {
   if (!bookingId.trim()) {
-    setError('Please enter a booking ID');
+    //setError('Please enter a booking ID');
     return;
   }
 
   setIsLoading(true);
-  setError(null);
+  //setError(null);
 
   try {
     const response = await fetch(`${BACKEND_URL}/api/v2/bookings/${bookingId}`, {
@@ -249,13 +249,13 @@ useEffect(() => {
       socketRef.current.emit('subscribe', bookingId);
     } else {
       console.warn('Socket not connected, unable to subscribe to updates');
-      setError('Warning: Real-time updates may be unavailable');
+      //setError('Warning: Real-time updates may be unavailable');
     }
 
     updateMap(data.booking);
   } catch (error) {
     console.error('Error fetching ride details:', error);
-    setError(error.message);
+    //setError(error.message);
   } finally {
     setIsLoading(false);
   }
@@ -265,7 +265,7 @@ useEffect(() => {
     if (!rideDetails?._id) return;
 
     setIsLoading(true);
-    setError(null);
+    //setError(null);
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers/current-location/${rideDetails._id}`, {
@@ -288,7 +288,7 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('Error fetching driver location:', error);
-      setError(error.message);
+      //setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -315,7 +315,7 @@ useEffect(() => {
             <button
               onClick={fetchRideDetails}
               disabled={isLoading}
-              className="mt-3 md:mt-4 w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+              className="mt-3 md:mt-4 w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -344,7 +344,7 @@ useEffect(() => {
               </div>
 
               <div className="relative pl-8 py-4">
-                <div className="absolute left-0 top-6 w-[2px] h-[calc(100%-48px)] bg-gradient-to-b from-indigo-500 to-purple-500 rounded"></div>
+                <div className="absolute left-0 top-6 w-[2px] h-[calc(100%-48px)] bg-gradient-to-b from-indigo-500 to-blue-500 rounded"></div>
                 
                 <div className="relative mb-6 md:mb-8">
                   <div className="absolute left-[-15px] w-6 h-6 md:w-8 md:h-8 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg">
@@ -355,7 +355,7 @@ useEffect(() => {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute left-[-15px] w-6 h-6 md:w-8 md:h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="absolute left-[-15px] w-6 h-6 md:w-8 md:h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
                     <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                   </div>
                   <div className="text-sm text-gray-500 mb-1">To</div>
@@ -374,7 +374,7 @@ useEffect(() => {
                 <button
                   onClick={getDriverLocation}
                   disabled={isLoading}
-                  className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                  className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-medium transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">

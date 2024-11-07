@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, Truck, User, DollarSign, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useSearch } from '../context/SearchContext';
 
 const statusOptions = ['all', 'pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled', 'scheduled'];
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
 
 const getStatusColor = (status) => {
@@ -26,6 +27,8 @@ const MyRides = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const { searchQuery } = useSearch();
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -87,17 +90,17 @@ const MyRides = () => {
     }
   };
 
-  const filteredBookings = bookings?.filter(booking => 
-    filter === 'all' || booking.status === filter
-  ) || [];
+  const filteredBookings = bookings?.filter(booking => {
+    const matchesStatus = filter === 'all' || booking.status === filter;
+    
+    if (!searchQuery) return matchesStatus;
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+    const searchLower = searchQuery.toLowerCase();
+    const pickupMatch = booking.pickup.address.toLowerCase().includes(searchLower);
+    const dropoffMatch = booking.dropoff.address.toLowerCase().includes(searchLower);
+
+    return matchesStatus && (pickupMatch || dropoffMatch);
+  }) || [];
 
   if (error) {
     return (
@@ -171,13 +174,22 @@ const MyRides = () => {
         {/* Bookings Grid */}
         {filteredBookings.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12 bg-white rounded-xl shadow-sm"
-          >
-            <p className="text-gray-600 text-lg mb-2">No rides found</p>
-            <p className="text-gray-500">Try selecting a different status filter</p>
-          </motion.div>
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="text-center py-12 bg-white rounded-xl shadow-sm"
+    >
+      {searchQuery ? (
+        <div>
+          <p className="text-gray-600 text-lg mb-2">No rides found matching "{searchQuery}"</p>
+          <p className="text-gray-500">Try a different search term or filter</p>
+        </div>
+      ) : (
+        <div>
+          {/* <p className="text-gray-600 text-lg mb-2">No rides found</p>
+          <p className="text-gray-500">Try selecting a different status filter</p> */}
+        </div>
+      )}
+    </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBookings.map((booking, index) => (

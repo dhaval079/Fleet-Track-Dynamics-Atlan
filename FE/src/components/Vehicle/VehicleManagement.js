@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Car, Truck, Calendar, Hexagon, Cpu, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);

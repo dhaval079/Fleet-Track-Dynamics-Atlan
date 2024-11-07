@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
 const DriverDashboard = () => {
   const { user } = useAuth();
@@ -507,7 +507,7 @@ jobs[activeTab].map(job => (
     <div className="grid grid-cols-5 gap-4 items-center">
       <div>
         <p className="text-sm text-gray-500">Booking ID</p>
-        <p className="font-mono text-sm text-gray-900">{job._id.slice(0, 10)}...</p>
+        <p className="font-mono text-sm text-gray-900">{job._id}</p>
       </div>
       <div>
         <p className="text-sm text-gray-500">From</p>
@@ -524,11 +524,11 @@ jobs[activeTab].map(job => (
       <div className="flex justify-end space-x-2">
         {activeTab === 'active' && (
           <>
-            <button 
-              onClick={() => updateJobStatus(job._id, 'en_route')}
+          <button 
+              onClick={() => updateJobStatus(job._id, 'goods_collected')}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors duration-200"
             >
-              En Route
+              Goods Collected
             </button>
             <button 
               onClick={() => updateJobStatus(job._id, 'completed')}
@@ -545,6 +545,17 @@ jobs[activeTab].map(job => (
           >
             Accept Request
           </button>
+        )}
+        {activeTab === 'incoming' && (
+          <>
+            <button 
+              onClick={() => updateJobStatus(job._id, 'en_route')}
+              className="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors duration-200"
+            >
+              En Route
+            </button>
+          
+          </>
         )}
       </div>
     </div>

@@ -13,6 +13,7 @@ import ErrorPage from './components/ErrorPage';
 import { AuthProvider, useAuth } from './components/context/AuthContext';
 import DriverLocationUpdate from './components/Driver/DriverLocationUpdate';
 import VehicleManagement from './components/Vehicle/VehicleManagement';
+import { SearchProvider } from './components/context/SearchContext';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -93,9 +94,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
+          <SearchProvider>
       <Router>
         <AppLayout />
       </Router>
+      </SearchProvider>
     </AuthProvider>
   );
 }

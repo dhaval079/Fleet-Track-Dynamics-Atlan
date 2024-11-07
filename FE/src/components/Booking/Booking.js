@@ -1,92 +1,130 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
-import DatePicker from 'react-datepicker'; // You'll need to install this package
-import "react-datepicker/dist/react-datepicker.css";
-import { apiCall } from '../../utils/api';
-import { useAuth } from '../context/AuthContext';
-import { MapPin, Car, Clock, Users, ChevronDown, Search, Crosshair, ZoomIn, ZoomOut, Calendar } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
-const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with your actual API key
-const BACKEND_URL = 'https://fleet-track-dynamics-atlan.onrender.com';
+const GOOGLE_MAPS_API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with actual API key
+const BACKEND_URL = process.env.REACT_APP_BACKEND;
+const mapScriptUrl = `https://maps.gomaps.pro/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,directions`;
 
 
 const BookingComponent = () => {
+  // Refs
   const mapRef = useRef(null);
   const originInputRef = useRef(null);
   const destinationInputRef = useRef(null);
 
-  const { user } = useAuth();
-  const [map, setMap] = useState(null);
+  // Map related state
+  const [mapInstance, setMapInstance] = useState(null);
   const [directionsService, setDirectionsService] = useState(null);
   const [directionsRenderer, setDirectionsRenderer] = useState(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+  // Booking related state
   const [distance, setDistance] = useState('');
   const [duration, setDuration] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
+  const [userPrice, setUserPrice] = useState('');
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [userPrice, setUserPrice] = useState('');
-  const [bookingId, setBookingId] = useState(null);
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [socket, setSocket] = useState(null);
-  const [error, setError] = useState(null);
   const [matchedDriver, setMatchedDriver] = useState(null);
+  const [bookingId, setBookingId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [socket, setSocket] = useState(null);
   const [selectionMode, setSelectionMode] = useState('manual');
   const [isScheduleFuture, setIsScheduleFuture] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
 
-
-  useEffect(() => {
-    loadGoogleMapsScript();
-    initializeSocket();
-    fetchVehicles();
-    fetchDrivers(); // Make sure this is called
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, []);
-
-  const loadGoogleMapsScript = () => {
-    const script = document.createElement('script');
-    script.src = `https://maps.gomaps.pro/maps/api/js?key=${API_KEY}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = initMap;
-    document.head.appendChild(script);
-  };
+  // Helper Functions
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
   };
-  useEffect(() => {
-    setScheduleDate(getTomorrowDate());
-  }, []);
 
-  const initMap = () => {
-    const mapInstance = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 40.7128, lng: -74.0060 }, // New York coordinates
-      zoom: 13
+  const showError = (message) => {
+    setError(message);
+    if (message === "Invalid vehicle or vehicle does not belong to the driver") {
+      alert("Select a different driver or vehicle, the selected vehicle does not belong to the driver");
+    } else {
+      alert(message);
+    }
+  };
+
+  // Google Maps Related Functions
+ // Add this function at the beginning of your component, before any other functions
+const loadGoogleMapsScript = () => {
+  return new Promise((resolve, reject) => {
+    if (typeof window.google !== 'undefined') {
+      resolve();
+      return;
+    }
+
+    // Remove any existing Google Maps scripts
+    const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    const script = document.createElement('script');
+    script.src = mapScriptUrl;
+    script.async = true;
+    script.defer = true;
+
+    script.addEventListener('load', () => {
+      // Wait a bit to ensure all Google Maps libraries are fully loaded
+      setTimeout(resolve, 100);
     });
 
+    script.addEventListener('error', (e) => {
+      reject(new Error('Failed to load Google Maps script'));
+    });
+
+    document.head.appendChild(script);
+  });
+};
+
+// Replace your existing initializeMap function with this one
+const initializeMap = async () => {
+  try {
+    if (!mapRef.current) return;
+
+    // Create the map instance
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: { lat: 40.7128, lng: -74.0060 }, // Default to New York
+      zoom: 12,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      streetViewControl: false,
+      zoomControl: true
+    });
+
+    // Create new instances of the services
     const directionsServiceInstance = new window.google.maps.DirectionsService();
-    const directionsRendererInstance = new window.google.maps.DirectionsRenderer();
+    const directionsRendererInstance = new window.google.maps.DirectionsRenderer({
+      map,
+      suppressMarkers: false,
+      preserveViewport: false
+    });
 
-    directionsRendererInstance.setMap(mapInstance);
-
-    setMap(mapInstance);
+    // Set the state
+    setMapInstance(map);
     setDirectionsService(directionsServiceInstance);
     setDirectionsRenderer(directionsRendererInstance);
 
-    const originAutocomplete = new window.google.maps.places.Autocomplete(originInputRef.current);
-    const destinationAutocomplete = new window.google.maps.places.Autocomplete(destinationInputRef.current);
+    // Initialize autocomplete
+    const originAutocomplete = new window.google.maps.places.Autocomplete(originInputRef.current, {
+      types: ['address']
+    });
+    const destinationAutocomplete = new window.google.maps.places.Autocomplete(destinationInputRef.current, {
+      types: ['address']
+    });
 
+    // Add place_changed listeners
     originAutocomplete.addListener('place_changed', () => {
       const place = originAutocomplete.getPlace();
       if (place.geometry) {
@@ -106,23 +144,113 @@ const BookingComponent = () => {
         };
       }
     });
+
+  } catch (error) {
+    console.error('Error initializing map:', error);
+    setError('Failed to initialize map. Please refresh the page.');
+  }
+};
+
+// Replace your existing calculateRoute function with this one
+const calculateRoute = () => {
+  if (!directionsService || !directionsRenderer) {
+    setError('Map services not initialized. Please try again.');
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+
+  const origin = originInputRef.current?.value;
+  const destination = destinationInputRef.current?.value;
+
+  if (!origin || !destination || !selectedVehicle) {
+    setError("Please enter origin, destination, and select a vehicle");
+    setIsLoading(false);
+    return;
+  }
+
+  const request = {
+    origin: originInputRef.current.coordinates || origin,
+    destination: destinationInputRef.current.coordinates || destination,
+    travelMode: window.google.maps.TravelMode.DRIVING,
+    optimizeWaypoints: true,
+    provideRouteAlternatives: false,
+    avoidHighways: false,
+    avoidTolls: false
   };
 
+  directionsService.route(request)
+    .then(result => {
+      directionsRenderer.setDirections(result);
+      const route = result.routes[0];
+      setDistance(route.legs[0].distance.text);
+      setDuration(route.legs[0].duration.text);
+      estimatePrice(route.legs[0].distance.value / 1000);
+      setIsLoading(false);
+    })
+    .catch(error => {
+      console.error('Direction Service Error:', error);
+      setError("Couldn't calculate route. Please verify the addresses and try again.");
+      setIsLoading(false);
+    });
+};
 
-  const showError = (message) => {
-    if(message == "Invalid vehicle or vehicle does not belong to the driver"){
-      setError(message);
-      alert("Select a different driver or vehicle, the selected vehicle does not belong to the driver")
-    }else{
-      setError(message);
-      alert(message); 
+  const initializeAutocomplete = () => {
+    try {
+      if (!window.google || !originInputRef.current || !destinationInputRef.current) return;
+
+      const originAutocomplete = new window.google.maps.places.Autocomplete(originInputRef.current);
+      const destinationAutocomplete = new window.google.maps.places.Autocomplete(destinationInputRef.current);
+
+      originAutocomplete.addListener('place_changed', () => {
+        const place = originAutocomplete.getPlace();
+        if (place.geometry) {
+          originInputRef.current.coordinates = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+          console.log(originInputRef.current.coordinates)
+        }
+      });
+
+      destinationAutocomplete.addListener('place_changed', () => {
+        const place = destinationAutocomplete.getPlace();
+        if (place.geometry) {
+          destinationInputRef.current.coordinates = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+          console.log(destinationInputRef.current.coordinates)
+
+        }
+      });
+    } catch (err) {
+      setError('Error initializing autocomplete: ' + err.message);
     }
   };
 
+  const updateMarkerPosition = (location) => {
+    if (mapInstance && location) {
+      const latLng = new window.google.maps.LatLng(location.lat, location.lng);
+
+      if (!mapRef.current.marker) {
+        mapRef.current.marker = new window.google.maps.Marker({
+          map: mapInstance,
+          position: latLng
+        });
+      } else {
+        mapRef.current.marker.setPosition(latLng);
+      }
+
+      mapInstance.panTo(latLng);
+    }
+  };
+
+  // Socket Related Functions
   const initializeSocket = () => {
-    const newSocket = io('https://fleet-track-dynamics-atlan.onrender.com', {
+    const newSocket = io(BACKEND_URL, {
       query: { token: localStorage.getItem('token') }
-      // withCredentials: true
     });
     
     setSocket(newSocket);
@@ -138,11 +266,12 @@ const BookingComponent = () => {
     });
   };
 
+  // API Calls
   const fetchVehicles = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/v2/vehicles`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        // 
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -163,8 +292,9 @@ const BookingComponent = () => {
     try {
       setIsLoading(true);
       const response = await fetch(`${BACKEND_URL}/api/v2/drivers`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`}
-        // credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
       if (!response.ok) {
@@ -181,36 +311,15 @@ const BookingComponent = () => {
     }
   };
 
-  const calculateRoute = () => {
-    setIsLoading(true);
-    setError(null);
-    const origin = originInputRef.current.value;
-    const destination = destinationInputRef.current.value;
-
-    if (!origin || !destination || !selectedVehicle) {
-      setError("Please enter origin, destination, and select a vehicle");
-      setIsLoading(false);
-      return;
-    }
-
-    const request = {
-      origin: origin,
-      destination: destination,
-      travelMode: 'DRIVING'
+  // Price Related Functions
+  const getPricePerKm = (vehicleType) => {
+    const prices = {
+      sedan: 0.5,
+      suv: 0.7,
+      van: 0.8,
+      truck: 0.9
     };
-
-    directionsService.route(request, (result, status) => {
-      if (status === 'OK') {
-        directionsRenderer.setDirections(result);
-        const route = result.routes[0];
-        setDistance(route.legs[0].distance.text);
-        setDuration(route.legs[0].duration.text);
-        estimatePrice(route.legs[0].distance.value / 1000);
-      } else {
-        setError("Couldn't calculate route. Please try again.");
-      }
-      setIsLoading(false);
-    });
+    return prices[vehicleType] || 0.5;
   };
 
   const estimatePrice = (distance) => {
@@ -222,24 +331,40 @@ const BookingComponent = () => {
     setUserPrice(price.toFixed(2));
   };
 
-  const getPricePerKm = (vehicleType) => {
-    switch (vehicleType) {
-      case 'sedan': return 0.5;
-      case 'suv': return 0.7;
-      case 'van': return 0.8;
-      case 'truck': return 0.9;
-      default: return 0.5;
-    }
-  };
 
+  // Update your useEffect to use the new async loading approach
+  useEffect(() => {
+    const initializeMaps = async () => {
+      try {
+        await loadGoogleMapsScript();
+        await initializeMap();
+        setIsMapLoaded(true);
+      } catch (error) {
+        console.error('Error loading maps:', error);
+        setError('Failed to load Google Maps. Please refresh the page.');
+      }
+    };
+  
+    initializeMaps();
+    initializeSocket();
+    fetchVehicles();
+    fetchDrivers();
+    setScheduleDate(getTomorrowDate());
+  
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, []);
+
+  // Driver Matching
   const findMatchingDriver = async () => {
     setIsLoading(true);
     setError(null);
+    
     try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      if (!originInputRef.current.coordinates) {
+      if (!originInputRef.current?.coordinates) {
         throw new Error('Please select a valid origin from the dropdown');
       }
 
@@ -249,9 +374,8 @@ const BookingComponent = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
-        
         body: JSON.stringify({
-          userId: localStorage.getItem('userId'), // Use the id from the authenticated user object
+          userId: localStorage.getItem('userId'),
           pickup: {
             address: originInputRef.current.value,
             coordinates: originInputRef.current.coordinates
@@ -279,77 +403,60 @@ const BookingComponent = () => {
     }
   };
 
+  // Booking Creation
   const bookRide = async () => {
     setIsLoading(true);
     setError(null);
-    const origin = originInputRef.current.value;
-    const destination = destinationInputRef.current.value;
-
-    // Validation checks
-    if (!origin || !destination) {
-      showError("Please enter both pickup and drop-off locations");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!selectedVehicle) {
-      showError("Please select a vehicle");
-      setIsLoading(false);
-      return;
-    }
-
-    if (selectionMode === 'manual' && !selectedDriver) {
-      showError("Please select a driver");
-      setIsLoading(false);
-      return;
-    }
-
-    if (selectionMode === 'automated' && !matchedDriver) {
-      showError("Please find a matching driver first");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!originInputRef.current.coordinates || !destinationInputRef.current.coordinates) {
-      showError("Please select valid locations from the dropdown suggestions");
-      setIsLoading(false);
-      return;
-    }
-
-    const finalPrice = parseFloat(userPrice);
-    if (isNaN(finalPrice) || finalPrice < parseFloat(estimatedPrice)) {
-      showError("Please enter a valid price (must be greater than or equal to the estimated price)");
-      setIsLoading(false);
-      return;
-    }
-
-    // Schedule validation
-    if (isScheduleFuture) {
-      if (!scheduleDate || !scheduleTime) {
-        showError("Please select both date and time for future booking");
-        setIsLoading(false);
-        return;
-      }
-
-      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
-      if (scheduledDateTime <= new Date()) {
-        showError("Scheduled time must be in the future");
-        setIsLoading(false);
-        return;
-      }
-    }
 
     try {
+      // Validation checks
+      if (!originInputRef.current?.value || !destinationInputRef.current?.value) {
+        throw new Error("Please enter both pickup and drop-off locations");
+      }
+
+      if (!selectedVehicle) {
+        throw new Error("Please select a vehicle");
+      }
+
+      if (selectionMode === 'manual' && !selectedDriver) {
+        throw new Error("Please select a driver");
+      }
+
+      if (selectionMode === 'automated' && !matchedDriver) {
+        throw new Error("Please find a matching driver first");
+      }
+
+      if (!originInputRef.current?.coordinates || !destinationInputRef.current?.coordinates) {
+        throw new Error("Please select valid locations from the dropdown suggestions");
+      }
+
+      const finalPrice = parseFloat(userPrice);
+      if (isNaN(finalPrice) || finalPrice < parseFloat(estimatedPrice)) {
+        throw new Error("Please enter a valid price (must be greater than or equal to the estimated price)");
+      }
+
+      // Schedule validation
+      if (isScheduleFuture) {
+        if (!scheduleDate || !scheduleTime) {
+          throw new Error("Please select both date and time for future booking");
+        }
+
+        const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+        if (scheduledDateTime <= new Date()) {
+          throw new Error("Scheduled time must be in the future");
+        }
+      }
+
       const bookingData = {
         userId: localStorage.getItem('userId'),
         driverId: selectionMode === 'manual' ? selectedDriver : matchedDriver._id,
         vehicleId: selectedVehicle,
         pickup: {
-          address: origin,
+          address: originInputRef.current.value,
           coordinates: originInputRef.current.coordinates
         },
         dropoff: {
-          address: destination,
+          address: destinationInputRef.current.value,
           coordinates: destinationInputRef.current.coordinates
         },
         price: finalPrice
@@ -378,14 +485,9 @@ const BookingComponent = () => {
       }
 
       if (data.success) {
-        // Clear any existing errors
         setError(null);
-        // Show success message
         alert(`Ride ${isScheduleFuture ? 'scheduled' : 'booked'} successfully! Booking ID: ${data.booking._id}`);
         setBookingId(data.booking._id);
-
-        // Optional: Clear form or redirect user
-        // clearForm(); // You could add this function to reset the form
       } else {
         throw new Error(data.message || 'Booking failed');
       }
@@ -398,25 +500,25 @@ const BookingComponent = () => {
     }
   };
 
+  // Effects
+  useEffect(() => {
+    loadGoogleMapsScript();
+    initializeSocket();
+    fetchVehicles();
+    fetchDrivers();
+    setScheduleDate(getTomorrowDate());
 
-
-  const updateMarkerPosition = (location) => {
-    if (map && location) {
-      const latLng = new window.google.maps.LatLng(location.lat, location.lng);
-
-      if (!mapRef.current.marker) {
-        mapRef.current.marker = new window.google.maps.Marker({
-          map: map,
-          position: latLng
-        });
-      } else {
-        mapRef.current.marker.setPosition(latLng);
+    return () => {
+      if (socket) {
+        socket.disconnect();
       }
-
-      map.panTo(latLng);
-    }
-  };
-
+      const script = document.querySelector(`script[src*="maps.gomaps.pro/maps/api"]`);
+      if (script) {
+        script.remove();
+      }
+    };
+  }, []);
+  
  return (
    <div className="min-h-screen bg-gray-50">
       <div className="w-full h-screen flex">
