@@ -120,6 +120,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
+app.get("/", (req, res) => {
+  res.send("Welcome to LogistiQ API");
+})
+
+
 // Routes setup
 app.use("/api/v2/auth", authRouter);
 app.use("/api/v2/users", userRouter);
