@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
 
 const statusOptions = ['all', 'pending', 'assigned', 'en_route', 'goods_collected', 'completed', 'cancelled', 'scheduled'];
-const BACKEND_URL = process.env.REACT_APP_BACKEND;
+const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
 
 
 const getStatusColor = (status) => {
