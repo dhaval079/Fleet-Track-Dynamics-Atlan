@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Truck, Shield, ArrowRight, Mail, Lock, Phone, MapPin, CreditCard, Clock } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 
-const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
+const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
 
 
 // Custom CSS animations
@@ -118,7 +118,7 @@ const Auth = () => {
   const testAccounts = [
     { role: 'Customer', email: 'rupaparadhaval1234@gmail.com', password: 'atlanbackend', icon: <User size={24} />, gradient: 'from-blue-500 to-blue-600' },
     { role: 'Driver', email: 'janesmith1@example.com', password: 'securepassword456', icon: <Truck size={24} />, gradient: 'from-green-500 to-green-600' },
-    { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield size={24} />, gradient: 'from-purple-500 to-purple-600' },
+    { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield size={24} />, gradient: 'from-slate-300 to-slate-500' },
   ];
 
   const handleChange = (e) => {
@@ -209,7 +209,7 @@ const Auth = () => {
   return (
     <>
       <style>{styles}</style>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-600 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
         <div className="max-w-6xl w-full space-y-8 animate-slide-up">
           {/* Header */}
           <div className="text-center space-y-4">

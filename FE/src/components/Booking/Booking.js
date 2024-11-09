@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { MapPin } from 'lucide-react';
 
 const GOOGLE_MAPS_API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with actual API key
-const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
+const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
 
 const mapScriptUrl = `https://maps.gomaps.pro/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,directions`;
 
