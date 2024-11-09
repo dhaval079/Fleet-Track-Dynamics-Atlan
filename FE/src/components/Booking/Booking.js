@@ -4,6 +4,7 @@ import { MapPin } from 'lucide-react';
 
 const GOOGLE_MAPS_API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu'; // Replace with actual API key
 const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
+
 const mapScriptUrl = `https://maps.gomaps.pro/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,directions`;
 
 
@@ -57,6 +58,7 @@ const BookingComponent = () => {
 
   // Google Maps Related Functions
  // Add this function at the beginning of your component, before any other functions
+// Google Maps Related Functions
 const loadGoogleMapsScript = () => {
   return new Promise((resolve, reject) => {
     if (typeof window.google !== 'undefined') {
@@ -64,7 +66,6 @@ const loadGoogleMapsScript = () => {
       return;
     }
 
-    // Remove any existing Google Maps scripts
     const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
     if (existingScript) {
       existingScript.remove();
@@ -76,11 +77,10 @@ const loadGoogleMapsScript = () => {
     script.defer = true;
 
     script.addEventListener('load', () => {
-      // Wait a bit to ensure all Google Maps libraries are fully loaded
       setTimeout(resolve, 100);
     });
 
-    script.addEventListener('error', (e) => {
+    script.addEventListener('error', () => {
       reject(new Error('Failed to load Google Maps script'));
     });
 
@@ -88,14 +88,32 @@ const loadGoogleMapsScript = () => {
   });
 };
 
-// Replace your existing initializeMap function with this one
 const initializeMap = async () => {
   try {
     if (!mapRef.current) return;
 
-    // Create the map instance
+    let userLocation = { lat: 40.7128, lng: -74.0060 }; // Default to New York
+
+    // Request user location
+    await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setCurrentLocation(userLocation);
+          resolve();
+        },
+        (error) => {
+          console.error('Location permission denied:', error);
+          resolve(); // Continue with the default location if permission is denied
+        }
+      );
+    });
+
     const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 40.7128, lng: -74.0060 }, // Default to New York
+      center: userLocation,
       zoom: 12,
       mapTypeControl: false,
       fullscreenControl: false,
@@ -103,7 +121,6 @@ const initializeMap = async () => {
       zoomControl: true
     });
 
-    // Create new instances of the services
     const directionsServiceInstance = new window.google.maps.DirectionsService();
     const directionsRendererInstance = new window.google.maps.DirectionsRenderer({
       map,
@@ -111,20 +128,13 @@ const initializeMap = async () => {
       preserveViewport: false
     });
 
-    // Set the state
     setMapInstance(map);
     setDirectionsService(directionsServiceInstance);
     setDirectionsRenderer(directionsRendererInstance);
 
-    // Initialize autocomplete
-    const originAutocomplete = new window.google.maps.places.Autocomplete(originInputRef.current, {
-      types: ['address']
-    });
-    const destinationAutocomplete = new window.google.maps.places.Autocomplete(destinationInputRef.current, {
-      types: ['address']
-    });
+    const originAutocomplete = new window.google.maps.places.Autocomplete(originInputRef.current, { types: ['address'] });
+    const destinationAutocomplete = new window.google.maps.places.Autocomplete(destinationInputRef.current, { types: ['address'] });
 
-    // Add place_changed listeners
     originAutocomplete.addListener('place_changed', () => {
       const place = originAutocomplete.getPlace();
       if (place.geometry) {
@@ -144,7 +154,6 @@ const initializeMap = async () => {
         };
       }
     });
-
   } catch (error) {
     console.error('Error initializing map:', error);
     setError('Failed to initialize map. Please refresh the page.');
@@ -340,11 +349,11 @@ const calculateRoute = () => {
         await initializeMap();
         setIsMapLoaded(true);
       } catch (error) {
-        console.error('Error loading maps:', error);
-        setError('Failed to load Google Maps. Please refresh the page.');
+        console.error("Error loading maps:", error);
+        setError("Failed to load Google Maps. Please refresh the page.");
       }
     };
-  
+
     initializeMaps();
     initializeSocket();
     fetchVehicles();

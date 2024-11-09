@@ -146,12 +146,12 @@ const Navbar = () => {
           <NavLink to="/profile" icon={User} onClick={closeMenus}>Profile</NavLink>
           <NavLink to="/tracking" icon={MapPin} onClick={closeMenus}>
             Track Ride &nbsp;
-            <div className="absolute top-1/2 -translate-y-1/2 right-2">
+            {/* <div className="absolute top-1/2 -translate-y-1/2 right-2">
               <div className="relative w-2 h-2">
                 <div className="absolute inset-0 bg-green-500 rounded-full animate-ping" />
                 <div className="relative w-2 h-2 bg-green-500 rounded-full" />
               </div>
-            </div>
+            </div> */}
           </NavLink>
         </div>
 

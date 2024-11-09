@@ -684,7 +684,7 @@ const BookingComponent = () => {
   };
 
   const initializeSocket = () => {
-    const newSocket = io('http://localhost:3001', {
+    const newSocket = io('https://fleet-track-dynamics-atlan-production.up.railway.app', {
       query: { token: localStorage.getItem('token') }
     });
     setSocket(newSocket);
@@ -1982,7 +1982,7 @@ const TrackingComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001', {
+    const newSocket = io('https://fleet-track-dynamics-atlan-production.up.railway.app', {
       query: { token: localStorage.getItem('token') }
     });
     setSocket(newSocket);
