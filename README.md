@@ -4,7 +4,7 @@ This repository contains the full-stack implementation of a highly scalable on-d
 
 # Resources
 
-### Backend : https://fleet-track-dynamics-atlan.onrender.com/
+### Backend : https://fleet-track-dynamics-atlan-production.up.railway.app/
 ### ER Diagram : https://claude.site/artifacts/b2e250b7-7fd9-4af9-a0e7-a75f4d2b387d
 ### Documentation : https://lace-ease-c7b.notion.site/On-Demand-Logistics-Platform-for-Goods-Transportation-Ride-Stream-123e42a2fef180d3b877f840aeaaffc9
 
@@ -138,7 +138,7 @@ npm install
 Create a `.env` file in the frontend directory and add the following:
 ```
 REACT_APP_API_URL=api
-REACT_APP_SOCKET_URL=https://fleet-track-dynamics-atlan.onrender.com
+REACT_APP_SOCKET_URL=https://fleet-track-dynamics-atlan-production.up.railway.app
 REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 

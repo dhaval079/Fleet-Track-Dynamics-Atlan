@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useCallback } from 'react';
 
 const AuthContext = createContext(null);
-const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
+const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
