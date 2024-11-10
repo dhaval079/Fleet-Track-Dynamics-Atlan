@@ -6,95 +6,66 @@ import { useAuth } from './context/AuthContext';
 const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
 
 
-// Custom CSS animations
 const styles = `
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
+  @keyframes borderAnimation {
+    0% {
+      clip-path: inset(0 100% 100% 0);
+    }
+    25% {
+      clip-path: inset(0 0 100% 0);
+    }
+    50% {
+      clip-path: inset(0 0 0 0);
+    }
+    75% {
+      clip-path: inset(100% 0 0 0);
+    }
+    100% {
+      clip-path: inset(100% 0 0 100%);
+    }
+  }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+  .animated-border-card {
+    position: relative;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-  20%, 40%, 60%, 80% { transform: translateX(2px); }
-}
+  .animated-border-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #fff, rgba(255,255,255,0.8));
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 0;
+  }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
+  .animated-border-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(255,255,255,0.8);
+    border-radius: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
 
-@keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
-}
+  .animated-border-card:hover::before {
+    opacity: 0.1;
+  }
 
-.animate-slide-up {
-  animation: slideUp 0.5s ease forwards;
-}
+  .animated-border-card:hover::after {
+    opacity: 1;
+    animation: borderAnimation 2s linear infinite;
+  }
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-.animate-shake {
-  animation: shake 0.5s ease forwards;
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-.shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-}
-
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-}
-
-.input-focus {
-  transition: all 0.3s ease;
-}
-
-.input-focus:focus {
-  transform: scale(1.02);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-.button-hover {
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.button-hover:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: all 0.5s ease;
-}
-
-.button-hover:hover:before {
-  left: 100%;
-}
+  .card-content {
+    position: relative;
+    z-index: 1;
+    background: inherit;
+    border-radius: 0.5rem;
+  }
 `;
 
 const Auth = () => {
@@ -117,8 +88,8 @@ const Auth = () => {
 
 const testAccounts = [
     { role: 'Customer', email: 'rupaparadhaval1234@gmail.com', password: 'atlanbackend', icon: <User size={24} />, gradient: 'from-blue-600 to-blue-700' },
-    { role: 'Driver', email: 'janesmith1@example.com', password: 'securepassword456', icon: <Truck size={24} />, gradient: 'from-emerald-500 to-emerald-600' },
-    { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield size={24} />, gradient: 'from-teal-500 to-teal-600' },
+    { role: 'Driver', email: 'janesmith1@example.com', password: 'securepassword456', icon: <Truck size={24} />, gradient: 'from-emerald-600 to-emerald-700' },
+    { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield size={24} />, gradient: 'from-teal-600 to-teal-700' },
 ];
 
   const handleChange = (e) => {
@@ -225,53 +196,53 @@ const testAccounts = [
 
           {/* Test Account Cards */}
           <div className="grid md:grid-cols-3 gap-6">
-            {testAccounts.map((account, index) => (
-              <div 
-                key={account.role}
-                className={`card-hover rounded-lg overflow-hidden bg-gradient-to-br ${account.gradient}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="p-6 space-y-6">
-                  <div className="text-center space-y-4">
-                    <div className="mx-auto bg-white/10 p-3 rounded-xl w-fit animate-pulse">
-                      {account.icon}
-                    </div>
-                    <h3 className="text-2xl font-bold text-white">{account.role}</h3>
+          {testAccounts.map((account, index) => (
+            <div 
+              key={account.role}
+              className={`animated-border-card bg-gradient-to-br ${account.gradient}`}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="card-content p-6 space-y-6">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto bg-white/20 p-3 rounded-xl w-fit animate-pulse">
+                    {account.icon}
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 bg-white/10 px-3 py-2 rounded-lg">
-                      <Mail size={16} className="text-white/60" />
-                      <input 
-                        type="email"
-                        defaultValue={account.email}
-                        className="bg-transparent text-white w-full outline-none placeholder-white/60 input-focus"
-                        readOnly
-                      />
-                    </div>
-                    <div className="flex items-center space-x-2 bg-white/10 px-3 py-2 rounded-lg">
-                      <Lock size={16} className="text-white/60" />
-                      <input 
-                        type="password"
-                        defaultValue={account.password}
-                        className="bg-transparent text-white w-full outline-none placeholder-white/60 input-focus"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => handleTestLogin(account.email, account.password)}
-                    className="w-full bg-white text-gray-800 py-2 rounded-lg font-medium button-hover flex items-center justify-center space-x-2"
-                    disabled={loading}
-                  >
-                    <span>{loading ? 'Logging in...' : `Login as ${account.role}`}</span>
-                    {!loading && <ArrowRight size={16} />}
-                  </button>
+                  <h3 className="text-2xl font-bold text-white">{account.role}</h3>
                 </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded-lg backdrop-blur-sm">
+                    <Mail size={16} className="text-white/80" />
+                    <input 
+                      type="email"
+                      defaultValue={account.email}
+                      className="bg-transparent text-white w-full outline-none placeholder-white/80 input-focus"
+                      readOnly
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded-lg backdrop-blur-sm">
+                    <Lock size={16} className="text-white/80" />
+                    <input 
+                      type="password"
+                      defaultValue={account.password}
+                      className="bg-transparent text-white w-full outline-none placeholder-white/80 input-focus"
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => handleTestLogin(account.email, account.password)}
+                  className="w-full bg-white/90 text-gray-800 py-2 rounded-lg font-medium button-hover flex items-center justify-center space-x-2 hover:bg-white transition-colors"
+                  disabled={loading}
+                >
+                  <span>{loading ? 'Logging in...' : `Login as ${account.role}`}</span>
+                  {!loading && <ArrowRight size={16} />}
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
 
           {/* Custom Login Form */}
           <div className="mt-12 max-w-md mx-auto">
