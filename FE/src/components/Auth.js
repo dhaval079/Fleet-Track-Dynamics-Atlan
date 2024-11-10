@@ -115,11 +115,11 @@ const Auth = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const testAccounts = [
-    { role: 'Customer', email: 'rupaparadhaval1234@gmail.com', password: 'atlanbackend', icon: <User size={24} />, gradient: 'from-blue-500 to-blue-600' },
-    { role: 'Driver', email: 'janesmith1@example.com', password: 'securepassword456', icon: <Truck size={24} />, gradient: 'from-green-500 to-green-600' },
-    { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield size={24} />, gradient: 'from-slate-300 to-slate-500' },
-  ];
+const testAccounts = [
+    { role: 'Customer', email: 'rupaparadhaval1234@gmail.com', password: 'atlanbackend', icon: <User size={24} />, gradient: 'from-blue-600 to-blue-700' },
+    { role: 'Driver', email: 'janesmith1@example.com', password: 'securepassword456', icon: <Truck size={24} />, gradient: 'from-emerald-500 to-emerald-600' },
+    { role: 'Admin', email: 'admin@example.com', password: 'adminpass123', icon: <Shield size={24} />, gradient: 'from-teal-500 to-teal-600' },
+];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
