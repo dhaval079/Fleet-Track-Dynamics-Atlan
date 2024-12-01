@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Truck, Shield, ArrowRight, Mail, Lock, Phone, MapPin, CreditCard, Clock } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 
-const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
+const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
 
 
 const styles = `
