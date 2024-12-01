@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 
 const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu';
 
-const BACKEND_URL = "https://fleet-track-dynamics-atlan-production.up.railway.app";
+const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
 
 
 const TrackingComponent = () => {
