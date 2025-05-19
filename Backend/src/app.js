@@ -1,3 +1,4 @@
+require('dotenv').config();
 const cors = require('cors');
 const dotenv = require("dotenv");
 const express = require('express');
@@ -17,10 +18,6 @@ const loggingMiddleware = require('./middleware/loggingMiddleware');
 const schedulerService = require('./services/schedulerService');
 
 
-require('dotenv').config();
-
-// Load environment variables first
-dotenv.config();
 
 // Create Express app
 const app = express();
@@ -42,12 +39,13 @@ schedulerService.init();
 // Middleware setup
 app.use(express.json());
 app.use(cookieParser());
+console.log("MONGO_URL is", process.env.MONGO_URL);
 // app.use(cors({
 //   origin: 'https://LogistiQ-atlan.vercel.app',
   
 const corsOptions = {
-  origin: ['https://logistiq-atlan.vercel.app'],
-  // origin: ['http://localhost:3000'],
+  // origin: ['https://logistiq-atlan.vercel.app'],
+  origin: ['http://localhost:3000'],
   // origin: ['https://logistiq-atlan.vercel.app', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

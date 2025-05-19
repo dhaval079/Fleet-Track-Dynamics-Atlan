@@ -1,6 +1,7 @@
 const Redis = require('ioredis');
 
-const REDIS_URL = process.env.REDIS_URL || "redis://default:OKcHAKw6SuUiXOcByfu2ytPPPlpmbTqh@redis-10498.c322.us-east-1-2.ec2.redns.redis-cloud.com:10498";
+const REDIS_URL = process.env.REDIS_URL || "redis://default:HHzEicJi8sZssDoWpiexWzDUeIdkT7JB@redis-10673.c10.us-east-1-2.ec2.redns.redis-cloud.com:10673";
+
 
 console.log('Connecting to Redis at:', REDIS_URL);
 
