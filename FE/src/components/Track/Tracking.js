@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
-const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu';
+const API_KEY = 'AlzaSydVL9oXBRjlq0jaFb8R6J23Jz4fP17mrJA';
 
 const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
 

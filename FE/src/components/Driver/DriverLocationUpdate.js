@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { MapPin, Navigation, AlertCircle, Check, Truck, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_KEY = 'AlzaSy3h_O_Xdl_y_uwhT5NDv3xwYzVvmgbvXvu';
+const API_KEY = 'AlzaSydVL9oXBRjlq0jaFb8R6J23Jz4fP17mrJA';
 const BACKEND_URL = "https://fleet-track-dynamics-atlan.onrender.com";
 const driverId = localStorage.getItem('userId');
 
