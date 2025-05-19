@@ -7,8 +7,6 @@ import { useSearch } from './context/SearchContext';
 const NavLink = memo(({ to, children, onClick, icon: Icon }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
- 
-
 
   return (
     <Link
@@ -88,7 +86,7 @@ const Navbar = () => {
   if (!user || !token) return null;
 
   return (
-    <nav className="relative h-20 bg-gradient-to-r from-slate-900 to-slate-800 shadow-lg">
+    <nav className="relative h-20 bg-gradient-to-r from-slate-900 to-slate-800 shadow-lg mt-10">
       {/* Frosted glass effect overlay */}
       <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-sm" />
 
@@ -248,6 +246,7 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+
   );
 };
 
