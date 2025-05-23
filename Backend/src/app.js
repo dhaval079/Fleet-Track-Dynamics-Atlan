@@ -44,13 +44,14 @@ console.log("MONGO_URL is", process.env.MONGO_URL);
 //   origin: 'https://LogistiQ-atlan.vercel.app',
   
 const corsOptions = {
-  // origin: ['https://logistiq-atlan.vercel.app'],
-  origin: ['http://localhost:3000'],
+  origin: ['https://logistiq-atlan.vercel.app'],
+  // origin: ['http://localhost:3000'],
   // origin: ['https://logistiq-atlan.vercel.app', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
+
 
 // Apply CORS before other middleware
 app.use(cors(corsOptions));
@@ -164,3 +165,8 @@ const startServer = async () => {
 startServer();
 
 module.exports = { app, server, io };
+
+
+
+
+
